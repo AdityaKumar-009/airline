@@ -1,0 +1,13 @@
+**/target/
+**/keys/private.pem
+**/keys/public.pem
+**/node_modules/
+**/dist/
+**/.angular/
+.idea/
+.vscode/
+.DS_Store
+/keys/
+/.tools/
+.local-maven-settings.xml
+/api-gateway/src/main/resources/static/

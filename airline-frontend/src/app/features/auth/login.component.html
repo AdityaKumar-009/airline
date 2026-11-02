@@ -1,0 +1,14 @@
+  <section class="auth-card panel"><h1>{{registering()?'Create account':'Welcome back'}}</h1>
+    <p class="muted">{{registering()?'Register to book flights.':'Log in to manage your reservations.'}}</p>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      @if(registering()) {<label>Full name<input formControlName="name" placeholder="Your name"/></label>}
+      <label>Email<input formControlName="email" type="email" placeholder="you@example.com"/></label>
+      <label>Password<input formControlName="password" type="password" placeholder="At least 8 characters"/></label>
+      @if(form.invalid&&submitted()){<p class="error">Enter a valid email, name (for registration), and password of at least 8 characters.</p>}
+      @if(error()){<p class="error">{{error()}}</p>}
+      @if(success()){<p class="success">{{success()}}</p>}
+      <button class="primary wide" [disabled]="busy()">{{busy()?'Please wait…':registering()?'Register':'Log in'}}</button>
+    </form>
+    <button type="button" class="text-button switch" (click)="toggle()">{{registering()?'Already have an account? Log in':'New here? Create account'}}</button>
+    <div class="demo-hint">Demo: customer&#64;airline.test / Customer&#64;12345<br/>Admin: admin&#64;airline.test / Admin&#64;12345</div>
+  </section>

@@ -1,0 +1,11 @@
+.search-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; align-items: end; gap: 16px; }
+.flight-price { text-align: right; }
+.book-link { min-width: 145px; }
+@media (max-width: 830px) {
+  .search-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .search-grid { grid-template-columns: 1fr; }
+  .flight-price { text-align: left; }
+  .book-link { width: 100%; }
+}

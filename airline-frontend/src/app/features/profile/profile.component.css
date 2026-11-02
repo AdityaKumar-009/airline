@@ -1,0 +1,7 @@
+.profile-panel { max-width: 580px; }
+.profile-panel h2 { margin-bottom: 20px; }
+.profile-panel form { display: grid; gap: 12px; }
+.profile-panel input[readonly] { background: #f5f7fa; color: #667487; }
+.profile-panel .muted { margin-top: -5px; margin-bottom: 4px; }
+.profile-panel button { justify-self: start; }
+.field-error { margin-top: -7px; color: #b42335; font-size: .82rem; }

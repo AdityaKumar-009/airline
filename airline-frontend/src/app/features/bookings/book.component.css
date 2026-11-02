@@ -1,0 +1,4 @@
+.booking-panel { max-width: 650px; }
+.booking-panel form { display: flex; max-width: 340px; flex-direction: column; align-items: stretch; gap: 15px; padding-top: 20px; }
+.booking-panel hr { margin: 24px 0 0; border: 0; border-top: 1px solid #e6e9f0; }
+.back { display: inline-block; margin-bottom: 25px; }

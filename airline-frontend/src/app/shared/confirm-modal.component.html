@@ -1,0 +1,26 @@
+    <div class="modal-backdrop" (click)="dismiss()">
+      <section
+        class="confirm-modal"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        aria-describedby="confirm-message"
+        (click)="$event.stopPropagation()">
+        <span class="modal-mark" aria-hidden="true">?</span>
+        <h2 id="confirm-title">{{ title }}</h2>
+        <p id="confirm-message">{{ message }}</p>
+        <div class="modal-actions">
+          <button #cancelButton type="button" class="secondary" (click)="dismiss()">
+            {{ cancelLabel }}
+          </button>
+          <button
+            type="button"
+            class="primary"
+            [class.danger-button]="destructive"
+            (click)="accept()">
+            {{ confirmLabel }}
+          </button>
+        </div>
+      </section>
+    </div>
+  

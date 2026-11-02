@@ -1,0 +1,19 @@
+  <section class="intro"><h1>Find your next flight</h1><p class="muted">Search available flights and book your seat.</p></section>
+  <form class="panel search-grid" [formGroup]="form" (ngSubmit)="search()">
+    <label>From<input formControlName="origin" placeholder="e.g. Delhi"/></label>
+    <label>To<input formControlName="destination" placeholder="e.g. Mumbai"/></label>
+    <label>Departure date<input formControlName="date" type="date"/></label>
+    <button class="primary">Search Flights</button>
+  </form>
+  <div class="section-heading"><h2>Available flights</h2><span class="muted">{{flights().length}} results</span></div>
+  @if(error()){<p class="error">{{error()}}</p>}
+  @if(loading()){<p class="muted">Loading flights…</p>}
+  @else if(!flights().length){<div class="panel empty">No available flights match your search.</div>}
+  @else{<div class="flight-list">
+    @for(f of flights();track f.id){<article class="panel flight-item">
+      <div><strong>{{f.flightNumber}}</strong><p class="muted">{{f.origin}} → {{f.destination}}</p></div>
+      <div><strong>{{formatDate(f.departureTime)}}</strong><p class="muted">{{formatTime(f.departureTime)}} – {{formatTime(f.arrivalTime)}} UTC</p></div>
+      <div class="flight-price"><strong>₹{{f.price}}</strong><p class="muted">per seat</p></div>
+      <a class="primary book-link" [routerLink]="auth.role()==='CUSTOMER'?['/flights',f.id,'book']:auth.role()==='ADMIN'?['/admin']:['/login']">{{auth.role()==='CUSTOMER'?'Select seat':auth.role()==='ADMIN'?'Manage flights':'Log in to book'}}</a>
+    </article>}
+  </div>}

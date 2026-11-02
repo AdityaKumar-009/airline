@@ -1,0 +1,27 @@
+    <section class="intro">
+      <h1>My profile</h1>
+      <p class="muted">Review your account details and update your name.</p>
+    </section>
+    <section class="panel profile-panel" aria-labelledby="profile-title">
+      <h2 id="profile-title">Account details</h2>
+      @if(loading()) { <p class="muted">Loading your profile…</p> }
+      @else if(error() && !profile()) { <p class="error" role="alert">{{error()}}</p> }
+      @else {
+        <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <label for="profile-name">Full name</label>
+          <input id="profile-name" formControlName="name" maxlength="100" autocomplete="name" />
+          @if(form.controls.name.touched && form.controls.name.invalid) {
+            <small class="field-error">Enter a name using up to 100 characters.</small>
+          }
+          <label for="profile-email">Email address</label>
+          <input id="profile-email" [value]="profile()?.email || ''" readonly />
+          <p class="muted">Email and account role cannot be changed here.</p>
+          @if(error()) { <p class="error" role="alert">{{error()}}</p> }
+          @if(success()) { <p class="success" role="status">{{success()}}</p> }
+          <button class="primary" type="submit" [disabled]="saving() || form.invalid">
+            {{saving() ? 'Saving…' : 'Save profile'}}
+          </button>
+        </form>
+      }
+    </section>
+  

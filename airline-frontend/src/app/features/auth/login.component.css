@@ -1,0 +1,6 @@
+.auth-card { max-width: 420px; margin: 28px auto; }
+.auth-card h1 { font-size: 1.6rem; }
+.auth-card form { display: flex; flex-direction: column; gap: 16px; margin-top: 24px; }
+.auth-card .switch { display: block; margin: 18px auto 0; }
+.demo-hint { margin-top: 18px; padding-top: 15px; border-top: 1px solid #e5e9f0; color: #6c7787; font-size: .78rem; line-height: 1.8; }
+.back { display: inline-block; margin-bottom: 25px; }

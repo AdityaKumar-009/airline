@@ -1,0 +1,20 @@
+  <section class="intro"><h1>My bookings</h1><p class="muted">Review your reservations and cancel when needed.</p></section>
+  @if(error()){<p class="error">{{error()}}</p>}
+  @if(loading()){<p class="muted">Loading bookings…</p>}
+  @else if(!bookings().length){<div class="panel empty">No bookings yet. <a routerLink="/flights">Find a flight</a>.</div>}
+  @else{<div class="flight-list">@for(b of bookings();track b.id){
+    <div class="panel booking-row"><div><strong>Booking #{{b.id}}</strong><p class="muted">Flight #{{b.flightId}} · Seat {{b.seatNumber}}</p></div>
+      <div><strong>₹{{b.fareAtBooking}}</strong><p class="muted">{{b.bookedAt.slice(0,10)}}</p></div>
+      <div><span [class]="b.status==='CONFIRMED'?'pill success-pill':'pill'">{{b.status}}</span></div>
+      @if(b.status==='CONFIRMED'){<button class="secondary" (click)="requestCancellation(b)">Cancel</button>}
+    </div>}
+  </div>}
+  @if(pendingCancellation(); as booking){
+    <app-confirm-modal
+      [title]="'Cancel booking #' + booking.id + '?'"
+      [message]="'Your seat will be released for another customer.'"
+      confirmLabel="Cancel booking"
+      [destructive]="true"
+      (confirmed)="cancel(booking)"
+      (dismissed)="pendingCancellation.set(null)" />
+  }

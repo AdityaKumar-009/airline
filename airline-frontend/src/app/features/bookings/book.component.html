@@ -1,0 +1,25 @@
+  <a routerLink="/flights" class="back">← Back to flights</a>
+  <section class="intro"><h1>Select your seat</h1><p class="muted">Choose an available seat and confirm your booking.</p></section>
+  @if(flight()){
+    <div class="panel booking-panel"><div class="flight-item compact">
+      <div><strong>{{flight()!.flightNumber}}</strong><p class="muted">{{flight()!.origin}} → {{flight()!.destination}}</p></div>
+      <div><strong>₹{{flight()!.price}}</strong><p class="muted">per seat</p></div>
+    </div><hr/>
+    <form [formGroup]="form" (ngSubmit)="requestBooking()">
+      <label>Seat number (1–{{flight()!.capacity}})
+        <input type="number" formControlName="seatNumber" [min]="1" [max]="flight()!.capacity" />
+      </label>
+      <p class="muted">Already occupied seats: {{occupied().length?occupied().join(', '):'None'}}</p>
+      @if(error()){<p class="error">{{error()}}</p>}
+      <button class="primary" [disabled]="busy()">Review booking</button>
+    </form></div>
+  }@else if(error()){<p class="error">{{error()}}</p>}
+  @else{<p class="muted">Loading flight details…</p>}
+  @if(pendingSeat() !== null){
+    <app-confirm-modal
+      title="Confirm booking"
+      [message]="bookingPrompt()"
+      confirmLabel="Book seat"
+      (confirmed)="book()"
+      (dismissed)="pendingSeat.set(null)" />
+  }
