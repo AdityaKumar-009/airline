@@ -1,46 +1,85 @@
-<section class="intro">
-  <h1>Find your next flight</h1>
-  <p class="muted">Search by city or airport code, choose a flight, and reserve up to four seats.</p>
+<section class="flight-hero">
+  <div class="hero-copy">
+    <span class="eyebrow">A smoother way to travel</span>
+    <h1>Find your next flight</h1>
+    <p>Search by city or airport code, choose a flight, and reserve up to four seats.</p>
+  </div>
 </section>
 
-<form class="panel search-grid" [formGroup]="form" (ngSubmit)="search()">
+<form class="panel search-grid" aria-label="Search flights" [formGroup]="form" (ngSubmit)="search()">
   <label>From
     <input formControlName="origin" list="airports-origin" placeholder="Delhi or DEL" />
-    <datalist id="airports-origin">@for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}</datalist>
+    <datalist id="airports-origin">
+      @for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
+    </datalist>
   </label>
   <label>To
     <input formControlName="destination" list="airports-destination" placeholder="Mumbai or BOM" />
-    <datalist id="airports-destination">@for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}</datalist>
+    <datalist id="airports-destination">
+      @for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
+    </datalist>
   </label>
-  <label>Departure date <input formControlName="date" type="date" /></label>
-  <button class="primary" [disabled]="loading()">Search flights</button>
+  <label>Departure date
+    <input formControlName="date" type="date" />
+  </label>
+  <button class="primary search-button" [disabled]="loading()">
+    {{loading() ? 'Searching…' : 'Search flights'}}
+  </button>
 </form>
 
-<div class="section-heading"><h2>Available flights</h2><span class="muted">{{flights().length}} results</span></div>
-@if(error()){<p class="error" role="alert">{{error()}}</p>}
-@if(loading()){<p class="muted">Loading flights…</p>}
-@else if(!flights().length){<div class="panel empty">No available flights match your search.</div>}
-@else{
-  <div class="flight-list">
-    @for(f of flights();track f.id){
-      <article class="panel flight-item">
-        <div>
-          <strong>{{f.flightNumber}}</strong>
-          <p class="muted">{{f.originCode || f.origin}} → {{f.destinationCode || f.destination}}</p>
-          <p class="muted">{{f.origin}} to {{f.destination}} · {{f.aircraftType}}</p>
-        </div>
-        <div>
-          <strong>{{formatDate(f.departureTime)}}</strong>
-          <p class="muted">{{formatTime(f.departureTime)}} – {{formatTime(f.arrivalTime)}} UTC · {{duration(f)}}</p>
-          @if(f.operationalStatus==='DELAYED'){<span class="pill">Delayed</span>}
-        </div>
-        <div class="flight-price"><strong>₹{{f.price}}</strong><p class="muted">per passenger</p></div>
-        <a class="primary book-link"
-          [routerLink]="auth.role()==='CUSTOMER'?['/flights',f.id,'book']:auth.role()==='ADMIN'?['/admin']:['/login']">
-          {{auth.role()==='CUSTOMER'?'Select seats':auth.role()==='ADMIN'?'Manage flights':'Log in to book'}}
-        </a>
-      </article>
-    }
+<section class="results-section">
+  <div class="section-heading">
+    <div>
+      <span class="eyebrow">Choose your journey</span>
+      <h2>Available flights</h2>
+    </div>
+    <span class="result-count">{{flights().length}} flights</span>
   </div>
-}
 
+  @if(error()){<p class="error" role="alert">{{error()}}</p>}
+  @if(loading()){<div class="panel empty loading-panel">Finding available flights…</div>}
+  @else if(!flights().length){<div class="panel empty">No available flights match your search.</div>}
+  @else{
+    <div class="flight-list">
+      @for(f of flights();track f.id){
+        <article class="panel flight-item">
+          <div class="flight-airline">
+            <span class="flight-mark" aria-hidden="true">✈</span>
+            <div>
+              <strong>{{f.flightNumber}}</strong>
+              <p class="muted">{{f.aircraftType}}</p>
+            </div>
+          </div>
+
+          <div class="flight-route">
+            <div class="airport">
+              <strong>{{f.originCode || f.origin}}</strong>
+              <span>{{f.origin}}</span>
+            </div>
+            <div class="route-line" aria-hidden="true"><span></span>✈<span></span></div>
+            <div class="airport destination">
+              <strong>{{f.destinationCode || f.destination}}</strong>
+              <span>{{f.destination}}</span>
+            </div>
+          </div>
+
+          <div class="flight-schedule">
+            <strong>{{formatTime(f.departureTime)}} – {{formatTime(f.arrivalTime)}}</strong>
+            <span>{{formatDate(f.departureTime)}} · {{duration(f)}}</span>
+            @if(f.operationalStatus==='DELAYED'){<span class="pill">Delayed</span>}
+          </div>
+
+          <div class="flight-price">
+            <strong>₹{{f.price}}</strong>
+            <span>per passenger</span>
+          </div>
+
+          <a class="primary book-link"
+            [routerLink]="auth.role()==='CUSTOMER'?['/flights',f.id,'book']:auth.role()==='ADMIN'?['/admin']:['/login']">
+            {{auth.role()==='CUSTOMER'?'Select seats':auth.role()==='ADMIN'?'Manage flights':'Log in to book'}}
+          </a>
+        </article>
+      }
+    </div>
+  }
+</section>

@@ -1,12 +1,21 @@
-.profile-panel { max-width: 580px; }
+:host { display: block; }
+
+.profile-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 18px; }
+
+.profile-panel { width: 100%; max-width: none; }
+
 .profile-panel h2 { margin-bottom: 20px; }
+
 .profile-panel form { display: grid; gap: 12px; }
-.profile-panel input[readonly] { background: #f5f7fa; color: #667487; }
-.profile-panel .muted { margin-top: -5px; margin-bottom: 4px; }
+
+.profile-panel input[readonly] { background: #f5f7fa; color: #718096; }
+
+.profile-panel .muted { margin-top: -4px; }
+
 .profile-panel button { justify-self: start; }
-.field-error { margin-top: -7px; color: #b42335; font-size: .82rem; }
 
-.profile-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
-.profile-sections .profile-panel{width:100%;max-width:none}
-@media(max-width:760px){.profile-sections{grid-template-columns:1fr}}
+.field-error { margin-top: -7px; color: var(--danger); font-size: .82rem; }
 
+@media (max-width: 760px) { .profile-sections { grid-template-columns: 1fr; } }
+
+@media (max-width: 520px) { .profile-panel button { width: 100%; } }

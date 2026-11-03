@@ -1,1 +1,26 @@
 :host { display: block; }
+
+.booking-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(130px, .7fr) auto auto;
+  padding: 20px 22px;
+}
+
+.booking-row > div:first-child { min-width: 0; }
+
+.booking-row .muted { overflow-wrap: anywhere; }
+
+.booking-controls { display: flex; align-items: center; gap: 8px; }
+
+.booking-controls .secondary { min-height: 40px; padding: 8px 12px; }
+
+@media (max-width: 760px) {
+  .booking-row { grid-template-columns: 1fr 1fr; align-items: start; }
+  .booking-controls { grid-column: 1 / -1; }
+}
+
+@media (max-width: 480px) {
+  .booking-row { grid-template-columns: 1fr auto; padding: 17px; }
+  .booking-row > div:first-child { grid-column: 1 / -1; }
+  .booking-controls { grid-column: 1 / -1; justify-content: space-between; }
+}

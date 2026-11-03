@@ -1,14 +1,53 @@
-  <section class="auth-card panel"><h1>{{registering()?'Create account':'Welcome back'}}</h1>
-    <p class="muted">{{registering()?'Register to book flights.':'Log in to manage your reservations.'}}</p>
+<section class="auth-layout" [class.registering]="registering()">
+  <div class="auth-visual" aria-hidden="true">
+    <div class="visual-copy">
+      <span class="visual-tag">AIRLINE TRAVEL</span>
+      <h2>Your next journey starts here.</h2>
+      <p>Simple planning. More places to discover.</p>
+    </div>
+    <span class="visual-caption">A little closer to somewhere new</span>
+  </div>
+
+  <section class="auth-card">
+    <span class="eyebrow">AirlineMS account</span>
+    <h1>{{registering() ? 'Create your account' : 'Welcome back'}}</h1>
+    <p class="muted">{{registering() ? 'Save your details and book a journey.' : 'Sign in to manage your trips and reservations.'}}</p>
+
     <form [formGroup]="form" (ngSubmit)="submit()">
-      @if(registering()) {<label>Full name<input formControlName="name" placeholder="Your name"/></label>}
-      <label>Email<input formControlName="email" type="email" placeholder="you@example.com"/></label>
-      <label>Password<input formControlName="password" type="password" placeholder="At least 8 characters"/></label>
-      @if(form.invalid&&submitted()){<p class="error">Enter a valid email, name (for registration), and password of at least 8 characters.</p>}
-      @if(error()){<p class="error">{{error()}}</p>}
-      @if(success()){<p class="success">{{success()}}</p>}
-      <button class="primary wide" [disabled]="busy()">{{busy()?'Please wait…':registering()?'Register':'Log in'}}</button>
+      @if(registering()) {
+        <label>Full name
+          <input formControlName="name" placeholder="Your name" autocomplete="name" />
+        </label>
+      }
+      <label>Email
+        <input formControlName="email" type="email" placeholder="you@example.com" autocomplete="email" />
+      </label>
+      <label>Password
+        <input formControlName="password" type="password" placeholder="At least 8 characters"
+          [attr.autocomplete]="registering() ? 'new-password' : 'current-password'" />
+      </label>
+
+      @if(form.invalid && submitted()){
+        <p class="error" role="alert">Enter a valid email, name (for registration), and password of at least 8 characters.</p>
+      }
+      @if(error()){<p class="error" role="alert">{{error()}}</p>}
+      @if(success()){<p class="success" role="status">{{success()}}</p>}
+
+      <button class="primary wide" [disabled]="busy()">
+        {{busy() ? 'Please wait…' : registering() ? 'Create account' : 'Sign in'}}
+      </button>
     </form>
-    <button type="button" class="text-button switch" (click)="toggle()">{{registering()?'Already have an account? Log in':'New here? Create account'}}</button>
-    <div class="demo-hint">Demo: customer&#64;airline.test / Customer&#64;12345<br/>Admin: admin&#64;airline.test / Admin&#64;12345</div>
+
+    <button type="button" class="text-button switch" (click)="toggle()">
+      {{registering() ? 'Already have an account? Sign in' : 'New here? Create account'}}
+    </button>
+
+    @if(!registering()){
+      <div class="demo-hint">
+        <strong>Quick demo access</strong>
+        <span>Customer · customer&#64;airline.test / Customer&#64;12345</span>
+        <span>Admin · admin&#64;airline.test / Admin&#64;12345</span>
+      </div>
+    }
   </section>
+</section>

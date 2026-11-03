@@ -1,11 +1,35 @@
-  <header class="topbar"><div class="container nav">
-    <a class="brand" routerLink="/flights"><span class="brand-icon">✈</span> AirlineMS</a>
-    <nav><a routerLink="/flights">Flights</a>
-      @if(auth.role()==='CUSTOMER'){<a routerLink="/my-bookings">My Bookings</a><a routerLink="/profile">My Profile</a>}
-      @if(auth.role()==='ADMIN'){<a routerLink="/admin">Manage Flights</a>}
-      @if(auth.token()){<span class="welcome">{{auth.name()}}</span><button class="text-button" (click)="logout()">Log out</button>}
-      @else{<a class="nav-login" routerLink="/login">Log in</a>}
+<header class="topbar">
+  <div class="container nav">
+    <a class="brand" routerLink="/flights" aria-label="AirlineMS home">
+      <span class="brand-icon" aria-hidden="true">✈</span>
+      <span>AirlineMS</span>
+    </a>
+
+    <nav aria-label="Main navigation">
+      <a class="nav-link" routerLink="/flights" routerLinkActive="active"
+        [routerLinkActiveOptions]="{exact: true}">Flights</a>
+      @if(auth.role()==='CUSTOMER'){
+        <a class="nav-link" routerLink="/my-bookings" routerLinkActive="active">My Bookings</a>
+        <a class="nav-link" routerLink="/profile" routerLinkActive="active">My Profile</a>
+      }
+      @if(auth.role()==='ADMIN'){
+        <a class="nav-link" routerLink="/admin" routerLinkActive="active">Manage Flights</a>
+      }
+      @if(auth.token()){
+        <span class="welcome">{{auth.name()}}</span>
+        <button class="text-button logout-button" (click)="logout()">Log out</button>
+      } @else {
+        <a class="nav-login" routerLink="/login" routerLinkActive="active">Log in</a>
+      }
     </nav>
-  </div></header>
-  <main class="container page"><router-outlet/></main>
-  <footer class="container footer">AirlineMS · Student demonstration · No payments</footer>
+  </div>
+</header>
+
+<main class="container page">
+  <router-outlet />
+</main>
+
+<footer class="container footer">
+  <span>AirlineMS</span>
+  <span>Student demonstration · No payments</span>
+</footer>
