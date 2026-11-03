@@ -1,0 +1,21 @@
+.ticket-shell{max-width:820px;margin:0 auto}
+.ticket-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:12px}
+.itinerary{padding:32px}
+.ticket-heading{display:flex;align-items:start;justify-content:space-between;gap:14px}
+.ticket-heading h1{font-size:32px;letter-spacing:.12em;margin:4px 0}
+.route-overview{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:28px 0;padding:20px 0;border-top:1px dashed #cbd5e1;border-bottom:1px dashed #cbd5e1}
+.route-overview strong{font-size:28px}
+.route-arrow{color:#64748b;text-align:center}
+.ticket-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:16px 0 26px}
+.ticket-facts dt{font-size:12px;color:#64748b}.ticket-facts dd{margin:4px 0;font-weight:600;overflow-wrap:anywhere}
+.ticket-table-wrap{overflow:auto}
+.ticket-total{display:flex;justify-content:space-between;gap:12px;padding:20px 0;margin:18px 0;border-top:1px solid #e5e7eb;font-size:18px}
+.flight-warning{border:1px solid #f59e0b;background:#fffbeb;border-radius:8px;padding:12px;color:#92400e}
+.footnote{font-size:12px}
+@media(max-width:640px){.itinerary{padding:16px}.ticket-facts{grid-template-columns:1fr}.route-overview strong{font-size:20px}}
+@media print{
+  .ticket-actions{display:none}
+  .ticket-shell{max-width:none}
+  .itinerary{border:0;box-shadow:none}
+}
+

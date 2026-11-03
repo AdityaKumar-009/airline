@@ -2,17 +2,19 @@ package com.airline.booking.service;
 
 import com.airline.booking.domain.BookingStatus;
 import com.airline.booking.domain.FlightStatus;
-import com.airline.booking.dto.BookingDtos.BookingRequest;
-import com.airline.booking.dto.BookingDtos.BookingResponse;
-import com.airline.booking.dto.BookingDtos.AdminBookingResponse;
-import com.airline.booking.dto.BookingDtos.FlightSnapshot;
+import com.airline.booking.dto.BookingDtos.*;
 import com.airline.booking.entity.Booking;
+import com.airline.booking.entity.BookingPassenger;
 import com.airline.booking.entity.SeatAllocation;
 import com.airline.booking.repository.BookingRepository;
 import com.airline.booking.repository.SeatAllocationRepository;
+import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -25,71 +27,89 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class BookingServiceImpl implements BookingService {
+  private static final String PNR_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  private final SecureRandom random = new SecureRandom();
   private final BookingRepository bookings;
   private final SeatAllocationRepository seats;
   private final RestClient flightClient;
 
-  public BookingServiceImpl(
-      BookingRepository bookings,
-      SeatAllocationRepository seats,
-      @Qualifier("flightRestClientBuilder") RestClient.Builder builder) {
+  public BookingServiceImpl(BookingRepository bookings, SeatAllocationRepository seats,
+                            @Qualifier("flightRestClientBuilder") RestClient.Builder builder) {
     this.bookings = bookings;
     this.seats = seats;
     this.flightClient = builder.baseUrl("http://flight-service").build();
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<Integer> occupied(Long flightId) {
+    if (flightId == null || flightId <= 0) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Flight ID must be positive");
+    }
     return seats.findByFlightId(flightId).stream()
-        .map(allocation -> allocation.seatNumber)
-        .sorted()
-        .toList();
+        .map(allocation -> allocation.seatNumber).sorted().toList();
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<BookingResponse> mine(Long userId) {
-    return bookings.findByUserIdOrderByBookedAtDesc(userId).stream()
-        .map(this::toResponse)
-        .toList();
+    return bookings.findByUserIdOrderByBookedAtDesc(userId).stream().map(this::toResponse).toList();
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<AdminBookingResponse> adminBookings(Long flightId, BookingStatus status) {
-    if (flightId != null && flightId < 1) {
+    if (flightId != null && flightId <= 0) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Flight ID must be positive");
     }
     return bookings.findAllByOrderByBookedAtDesc().stream()
-        .filter(booking -> flightId == null || booking.flightId.equals(flightId))
-        .filter(booking -> status == null || booking.status == status)
-        .map(this::toAdminResponse)
-        .toList();
+        .filter(b -> flightId == null || b.flightId.equals(flightId))
+        .filter(b -> status == null || b.status == status)
+        .map(this::toAdminResponse).toList();
   }
 
   @Override
   @Transactional
   public BookingResponse book(Long userId, BookingRequest request) {
     FlightSnapshot flight = lookupFlight(request.flightId());
-    LocalDateTime nowUtc = LocalDateTime.now(Clock.systemUTC());
-    boolean flightIsBookable = flight != null
-        && flight.status() == FlightStatus.OPEN
-        && flight.departureTime().isAfter(nowUtc);
-    if (!flightIsBookable) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Flight is not open for booking");
-    }
-    if (request.seatNumber() > flight.capacity()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Seat number exceeds capacity");
+    if (flight == null || flight.status() != FlightStatus.OPEN
+        || !"SCHEDULED".equals(flight.operationalStatus()) && !"DELAYED".equals(flight.operationalStatus())
+        || !flight.departureTime().isAfter(LocalDateTime.now(Clock.systemUTC()))) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Flight is not available for booking");
     }
 
-    Booking booking = bookings.saveAndFlush(
-        new Booking(userId, flight.id(), request.seatNumber(), flight.price()));
-    try {
-      // The database's unique flight/seat constraint handles simultaneous booking
-      // attempts.
-      seats.saveAndFlush(new SeatAllocation(booking.id, flight.id(), request.seatNumber()));
-    } catch (DataIntegrityViolationException e) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Seat already booked");
+    Set<Integer> requestedSeats = new HashSet<>();
+    for (PassengerInput passenger : request.passengers()) {
+      if (passenger.seatNumber() <= 0 || passenger.seatNumber() > flight.capacity()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Seat outside aircraft capacity");
+      }
+      if (!requestedSeats.add(passenger.seatNumber())) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each passenger needs a different seat");
+      }
     }
-    return toResponse(booking);
+
+    BigDecimal total = flight.price().multiply(BigDecimal.valueOf(request.passengers().size()));
+    Booking booking = new Booking(
+        userId, flight.id(), request.passengers().get(0).seatNumber(), total, uniquePnr(),
+        request.contactEmail().trim(), request.contactPhone(), flight.flightNumber(),
+        flight.origin(), flight.destination(), flight.originCode(), flight.destinationCode(),
+        flight.departureTime(), flight.arrivalTime());
+
+    for (PassengerInput passenger : request.passengers()) {
+      booking.addPassenger(new BookingPassenger(
+          passenger.fullName().trim(), passenger.age(), passenger.seatNumber(), flight.price()));
+    }
+
+    Booking saved = bookings.saveAndFlush(booking);
+    try {
+      for (PassengerInput passenger : request.passengers()) {
+        // Database UNIQUE(flight_id, seat_number) wins even if two browsers race.
+        seats.saveAndFlush(new SeatAllocation(saved.id, flight.id(), passenger.seatNumber()));
+      }
+    } catch (DataIntegrityViolationException e) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "A selected seat was just booked");
+    }
+    return toResponse(saved);
   }
 
   @Override
@@ -97,52 +117,54 @@ public class BookingServiceImpl implements BookingService {
   public BookingResponse cancel(Long userId, Long id) {
     Booking booking = bookings.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
-
     if (!booking.userId.equals(userId)) {
-      throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN, "This booking belongs to another customer");
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Booking belongs to another customer");
     }
     if (booking.status != BookingStatus.CONFIRMED) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Already cancelled");
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Booking already cancelled");
     }
-
     FlightSnapshot flight = lookupFlight(booking.flightId);
     if (!flight.departureTime().isAfter(LocalDateTime.now(Clock.systemUTC()))) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Past flights cannot be cancelled");
     }
-
     booking.status = BookingStatus.CANCELLED;
-    seats.deleteById(booking.id);
+    seats.deleteByBookingId(booking.id);
     return toResponse(bookings.save(booking));
   }
 
-  private BookingResponse toResponse(Booking booking) {
-    return new BookingResponse(
-        booking.id,
-        booking.flightId,
-        booking.seatNumber,
-        booking.fareAtBooking,
-        booking.status,
-        booking.bookedAt);
+  private String uniquePnr() {
+    for (int retry = 0; retry < 10; retry++) {
+      StringBuilder value = new StringBuilder(8);
+      for (int i = 0; i < 8; i++) value.append(PNR_ALPHABET.charAt(random.nextInt(PNR_ALPHABET.length())));
+      if (!bookings.existsByPnr(value.toString())) return value.toString();
+    }
+    throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Could not issue booking reference");
   }
 
-  private AdminBookingResponse toAdminResponse(Booking booking) {
-    return new AdminBookingResponse(
-        booking.id,
-        booking.userId,
-        booking.flightId,
-        booking.seatNumber,
-        booking.fareAtBooking,
-        booking.status,
-        booking.bookedAt);
+  private BookingResponse toResponse(Booking b) {
+    List<PassengerResponse> passengers = b.passengers.stream()
+        .map(p -> new PassengerResponse(p.id, p.fullName, p.age, p.seatNumber, seatCode(p.seatNumber), p.fare))
+        .toList();
+    return new BookingResponse(b.id, b.pnr, b.flightId, b.seatNumber, b.totalFare, b.status,
+        b.bookedAt, b.contactEmail, b.flightNumber, b.origin, b.destination, b.originCode,
+        b.destinationCode, b.departureTime, b.arrivalTime, passengers);
+  }
+
+  private AdminBookingResponse toAdminResponse(Booking b) {
+    return new AdminBookingResponse(b.id, b.pnr, b.userId, b.flightId, b.totalFare,
+        b.status, b.bookedAt, b.passengers.size(), b.flightNumber, b.contactEmail);
+  }
+
+  private String seatCode(int n) {
+    if (n < 1) return "?";
+    int row = (n - 1) / 6 + 1;
+    char letter = "ABCDEF".charAt((n - 1) % 6);
+    return row + String.valueOf(letter);
   }
 
   private FlightSnapshot lookupFlight(Long flightId) {
     try {
-      return flightClient.get()
-          .uri("/api/flights/{id}", flightId)
-          .retrieve()
-          .body(FlightSnapshot.class);
+      return flightClient.get().uri("/api/flights/{id}", flightId).retrieve().body(FlightSnapshot.class);
     } catch (HttpClientErrorException.NotFound e) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Flight not found");
     } catch (RestClientException e) {
@@ -150,3 +172,4 @@ public class BookingServiceImpl implements BookingService {
     }
   }
 }
+

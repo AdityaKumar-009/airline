@@ -1,42 +1,52 @@
 package com.airline.booking;
-import com.airline.booking.entity.SeatAllocation;
-import com.airline.booking.entity.Booking;
+
 import com.airline.booking.domain.BookingStatus;
+import com.airline.booking.entity.Booking;
+import com.airline.booking.entity.SeatAllocation;
 import com.airline.booking.repository.*;
 import com.airline.booking.service.BookingServiceImpl;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
-import java.util.List;
-import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
 class BookingServiceTest {
-  @Test void occupiedSeatsAreSorted(){
-    var bookings=mock(BookingRepository.class);
-    var allocations=mock(SeatAllocationRepository.class);
-    when(allocations.findByFlightId(5L)).thenReturn(List.of(new SeatAllocation(9L,5L,12),new SeatAllocation(7L,5L,2)));
-    var service=new BookingServiceImpl(bookings,allocations,RestClient.builder());
-    assertEquals(List.of(2,12),service.occupied(5L));
+  private final BookingRepository bookings = mock(BookingRepository.class);
+  private final SeatAllocationRepository allocations = mock(SeatAllocationRepository.class);
+  private final BookingServiceImpl service = new BookingServiceImpl(
+      bookings, allocations, RestClient.builder());
+
+  @Test
+  void occupiedSeatsAreSorted() {
+    when(allocations.findByFlightId(5L)).thenReturn(List.of(
+        new SeatAllocation(9L, 5L, 12),
+        new SeatAllocation(7L, 5L, 2)));
+    assertEquals(List.of(2, 12), service.occupied(5L));
   }
 
-  @Test void adminBookingReportFiltersByFlightAndStatus(){
-    var bookings=mock(BookingRepository.class);
-    var allocations=mock(SeatAllocationRepository.class);
-    var confirmed=new Booking(7L,5L,3,new BigDecimal("120.00"));
-    confirmed.id=11L;
-    var cancelled=new Booking(8L,5L,4,new BigDecimal("140.00"));
-    cancelled.id=12L;
-    cancelled.status=BookingStatus.CANCELLED;
-    var otherFlight=new Booking(9L,6L,1,new BigDecimal("160.00"));
-    otherFlight.id=13L;
-    when(bookings.findAllByOrderByBookedAtDesc()).thenReturn(List.of(confirmed,cancelled,otherFlight));
-    var service=new BookingServiceImpl(bookings,allocations,RestClient.builder());
+  @Test
+  void adminReportFiltersByFlightAndStatus() {
+    Booking confirmed = sample(1L, 5L, 3, "ABCDEFGH");
+    Booking cancelled = sample(2L, 5L, 4, "BCDEFGHJ");
+    cancelled.status = BookingStatus.CANCELLED;
+    Booking otherFlight = sample(3L, 6L, 1, "CDEFGHJK");
+    when(bookings.findAllByOrderByBookedAtDesc())
+        .thenReturn(List.of(confirmed, cancelled, otherFlight));
 
-    var result=service.adminBookings(5L,BookingStatus.CANCELLED);
+    var filtered = service.adminBookings(5L, BookingStatus.CANCELLED);
+    assertEquals(1, filtered.size());
+    assertEquals(cancelled.pnr, filtered.get(0).pnr());
+    assertEquals(BookingStatus.CANCELLED, filtered.get(0).status());
+    assertEquals(5L, filtered.get(0).flightId());
+  }
 
-    assertEquals(1,result.size());
-    assertEquals(12L,result.get(0).id());
-    assertEquals(8L,result.get(0).userId());
-    assertEquals(BookingStatus.CANCELLED,result.get(0).status());
+  private Booking sample(long userId, long flightId, int seat, String pnr) {
+    LocalDateTime departure = LocalDateTime.now().plusDays(5);
+    return new Booking(userId, flightId, seat, new BigDecimal("4500"), pnr,
+        "customer@example.test", null, "AI101", "Delhi", "Mumbai",
+        "DEL", "BOM", departure, departure.plusHours(2));
   }
 }

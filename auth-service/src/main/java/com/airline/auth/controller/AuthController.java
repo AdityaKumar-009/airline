@@ -42,6 +42,14 @@ public class AuthController {
     return service.updateMe(Long.valueOf(auth.getToken().getSubject()), request);
   }
 
+  @PatchMapping("/me/password")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @SecurityRequirement(name = "bearerAuth")
+  public void changePassword(JwtAuthenticationToken auth,
+      @Valid @RequestBody ChangePasswordRequest request) {
+    service.changePassword(Long.valueOf(auth.getToken().getSubject()), request);
+  }
+
   @GetMapping("/admin/customers")
   @SecurityRequirement(name = "bearerAuth")
   public List<AdminCustomerResponse> customers(@RequestParam(required = false) String search) {

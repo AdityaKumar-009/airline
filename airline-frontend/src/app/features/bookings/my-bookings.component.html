@@ -1,20 +1,30 @@
-  <section class="intro"><h1>My bookings</h1><p class="muted">Review your reservations and cancel when needed.</p></section>
-  @if(error()){<p class="error">{{error()}}</p>}
-  @if(loading()){<p class="muted">Loading bookings…</p>}
-  @else if(!bookings().length){<div class="panel empty">No bookings yet. <a routerLink="/flights">Find a flight</a>.</div>}
-  @else{<div class="flight-list">@for(b of bookings();track b.id){
-    <div class="panel booking-row"><div><strong>Booking #{{b.id}}</strong><p class="muted">Flight #{{b.flightId}} · Seat {{b.seatNumber}}</p></div>
-      <div><strong>₹{{b.fareAtBooking}}</strong><p class="muted">{{b.bookedAt.slice(0,10)}}</p></div>
-      <div><span [class]="b.status==='CONFIRMED'?'pill success-pill':'pill'">{{b.status}}</span></div>
-      @if(b.status==='CONFIRMED'){<button class="secondary" (click)="requestCancellation(b)">Cancel</button>}
-    </div>}
-  </div>}
-  @if(pendingCancellation(); as booking){
-    <app-confirm-modal
-      [title]="'Cancel booking #' + booking.id + '?'"
-      [message]="'Your seat will be released for another customer.'"
-      confirmLabel="Cancel booking"
-      [destructive]="true"
-      (confirmed)="cancel(booking)"
-      (dismissed)="pendingCancellation.set(null)" />
-  }
+<section class="intro"><h1>My bookings</h1><p class="muted">Your reservations, passenger details, PNRs and itineraries.</p></section>
+@if(error()){<p class="error" role="alert">{{error()}}</p>}
+@if(loading()){<p class="muted">Loading bookings…</p>}
+@else if(!bookings().length){<div class="panel empty">No bookings yet. <a routerLink="/flights">Find a flight</a>.</div>}
+@else{
+  <div class="flight-list">
+    @for(b of bookings();track b.id){
+      <article class="panel booking-row">
+        <div>
+          <strong>{{b.flightNumber || ('Flight #'+b.flightId)}}</strong>
+          <p class="muted">{{b.originCode || b.origin || 'Origin'}} → {{b.destinationCode || b.destination || 'Destination'}}</p>
+          <p class="muted">PNR: <strong>{{b.pnr}}</strong> · {{b.passengers.length}} passenger(s)</p>
+        </div>
+        <div><strong>₹{{b.totalFare}}</strong><p class="muted">Booked {{b.bookedAt.slice(0,10)}}</p></div>
+        <span class="pill" [class.success-pill]="b.status==='CONFIRMED'">{{b.status}}</span>
+        <div class="booking-controls">
+          <a class="secondary" [routerLink]="['/bookings',b.id]">View itinerary</a>
+          @if(canCancel(b)){<button class="text-button" (click)="requestCancellation(b)">Cancel</button>}
+        </div>
+      </article>
+    }
+  </div>
+}
+@if(pendingCancellation(); as b){
+  <app-confirm-modal [title]="'Cancel reservation '+b.pnr+'?'"
+    [message]="'All '+b.passengers.length+' reserved seat(s) will become available again.'"
+    confirmLabel="Cancel reservation" [destructive]="true"
+    (confirmed)="cancel(b)" (dismissed)="pendingCancellation.set(null)" />
+}
+

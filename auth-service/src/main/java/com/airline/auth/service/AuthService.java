@@ -17,4 +17,6 @@ public interface AuthService {
   UserResponse updateMe(Long id, UpdateProfileRequest request);
 
   List<AdminCustomerResponse> customers(String search);
+
+  void changePassword(Long id, com.airline.auth.dto.AuthDtos.ChangePasswordRequest request);
 }
