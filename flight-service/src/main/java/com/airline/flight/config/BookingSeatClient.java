@@ -13,6 +13,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Configuration
 class BookingClientConfig {
+  // Eureka must use the plain builder when discovering the registry itself.
+  @Bean @Primary
+  RestClient.Builder restClientBuilder() { return RestClient.builder(); }
+
   @Bean("bookingRestClientBuilder") @LoadBalanced
   RestClient.Builder bookingRestClientBuilder() {
     SimpleClientHttpRequestFactory factory=new SimpleClientHttpRequestFactory();
