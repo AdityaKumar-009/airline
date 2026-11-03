@@ -1,4 +1,4 @@
-<section class="intro">
+<section class="intro profile-intro">
   <h1>My profile</h1>
   <p class="muted">Your account details and security settings.</p>
 </section>
@@ -16,7 +16,8 @@
             [attr.aria-invalid]="form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty)" />
           @if((form.controls.name.touched || form.controls.name.dirty) && form.controls.name.invalid){
             <small id="profile-name-error" class="field-error">
-              @if(form.controls.name.hasError('required') || form.controls.name.hasError('pattern')){Enter your name.}
+              @if(form.controls.name.hasError('required')){Enter your full name.}
+              @else if(form.controls.name.hasError('pattern')){Use letters and spaces only.}
               @else{Your name must be 100 characters or fewer.}
             </small>
           }
@@ -28,7 +29,7 @@
         </div>
         @if(error()){<p class="error" role="alert">{{error()}}</p>}
         @if(success()){<p class="success" role="status">{{success()}}</p>}
-        <button class="primary" [disabled]="saving()">
+        <button class="primary" [disabled]="saving() || form.invalid">
           {{saving()?'Saving…':'Save profile'}}
         </button>
       </form>
@@ -66,7 +67,7 @@
       </div>
       @if(passwordError()){<p class="error" role="alert">{{passwordError()}}</p>}
       @if(passwordSuccess()){<p class="success" role="status">{{passwordSuccess()}}</p>}
-      <button class="primary" [disabled]="passwordSaving() || passwordsSame()">
+      <button class="primary" [disabled]="passwordSaving() || passwordForm.invalid || passwordsSame()">
         {{passwordSaving()?'Updating…':'Update password'}}
       </button>
     </form>

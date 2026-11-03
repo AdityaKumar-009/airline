@@ -19,7 +19,7 @@
       }
       <div class="route-overview">
         <div><strong>{{b.originCode || b.origin || '—'}}</strong><p class="muted">{{b.origin || 'Origin'}}</p></div>
-        <div class="route-arrow" aria-hidden="true">→</div>
+        <app-flight-path />
         <div><strong>{{b.destinationCode || b.destination || '—'}}</strong><p class="muted">{{b.destination || 'Destination'}}</p></div>
       </div>
       <dl class="ticket-facts">
@@ -39,9 +39,6 @@
         </table>
       </div>
       <div class="ticket-total"><span>Total fare (INR)</span><strong>₹{{b.totalFare}}</strong></div>
-      <p class="muted footnote">
-        This is a classroom reservation record, not a commercial airline ticket. No payment was collected.
-      </p>
     </article>
     }
   }

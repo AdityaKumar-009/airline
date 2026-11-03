@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { UserProfile } from '../../core/models';
+import { NAME_PATTERN } from '../../core/form-validators';
 
 @Component({
   standalone: true,
@@ -22,7 +23,7 @@ export class ProfileComponent implements OnInit {
   readonly currentPasswordError = signal('');
   readonly passwordSuccess = signal('');
   readonly form = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(/\S/)]]
+    name: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(NAME_PATTERN)]]
   });
   readonly passwordForm = this.fb.nonNullable.group({
     currentPassword: ['', Validators.required],

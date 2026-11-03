@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class BookingValidationTest {
@@ -49,7 +50,7 @@ class BookingValidationTest {
   @ValueSource(ints = {1, 4})
   void validPassengersReachBookingService(int count) throws Exception {
     String passengers = Stream.iterate(1, seat -> seat + 1).limit(count)
-        .map(seat -> passenger("Passenger " + seat, seat == 1 ? 1 : 120, seat))
+        .map(seat -> passenger("Passenger " + numberWord(seat), seat == 1 ? 1 : 120, seat))
         .collect(java.util.stream.Collectors.joining(","));
 
     mvc.perform(post("/api/bookings").principal(customer)
@@ -59,7 +60,7 @@ class BookingValidationTest {
     var booking = ArgumentCaptor.forClass(BookingRequest.class);
     verify(service).book(eq(7L), booking.capture());
     assertEquals(count, booking.getValue().passengers().size());
-    assertEquals("Passenger 1", booking.getValue().passengers().get(0).fullName());
+    assertEquals("Passenger One", booking.getValue().passengers().get(0).fullName());
     assertEquals(1L, booking.getValue().flightId());
   }
 
@@ -79,6 +80,8 @@ class BookingValidationTest {
     return Stream.of(
         Arguments.of("{\"age\":25,\"seatNumber\":2}", "fullName"),
         Arguments.of(passenger(" ", 25, 2), "fullName"),
+        Arguments.of(passenger("Passenger 2", 25, 2), "fullName"),
+        Arguments.of(passenger("Passenger!", 25, 2), "fullName"),
         Arguments.of(passenger("A".repeat(101), 25, 2), "fullName"),
         Arguments.of(passenger("Passenger", 0, 2), "age"),
         Arguments.of(passenger("Passenger", 121, 2), "age"),
@@ -95,6 +98,24 @@ class BookingValidationTest {
     verifyNoInteractions(service);
   }
 
+  @org.junit.jupiter.api.Test
+  void adminReservationFilterUsesFlightNumber() throws Exception {
+    mvc.perform(get("/api/bookings/admin").param("flightNumber", "AI101").param("status", "CANCELLED"))
+        .andExpect(status().isOk());
+
+    verify(service).adminBookings("AI101", com.airline.booking.domain.BookingStatus.CANCELLED);
+  }
+
+  @org.junit.jupiter.api.Test
+  void acceptsTenDigitIndianMobileNumber() throws Exception {
+    String body = request(passenger("Passenger One", 25, 1))
+        .replace("\"contactPhone\":\"\"", "\"contactPhone\":\"9876543210\"");
+    mvc.perform(post("/api/bookings").principal(customer)
+            .contentType(MediaType.APPLICATION_JSON).content(body))
+        .andExpect(status().isCreated());
+    verify(service).book(eq(7L), any(BookingRequest.class));
+  }
+
   static Stream<Arguments> invalidBookings() {
     String valid = request(passenger("Passenger", 25, 1));
     String fivePassengers = Stream.iterate(1, seat -> seat + 1).limit(5)
@@ -108,7 +129,9 @@ class BookingValidationTest {
         Arguments.of(valid.replace("\"flightId\":1", "\"flightId\":0"), "flightId"),
         Arguments.of(valid.replace("passenger@example.test", ""), "contactEmail"),
         Arguments.of(valid.replace("passenger@example.test", "invalid-email"), "contactEmail"),
-        Arguments.of(valid.replace("\"contactPhone\":\"\"", "\"contactPhone\":\"123\""), "contactPhone"));
+        Arguments.of(valid.replace("passenger@example.test", "passenger@example.c"), "contactEmail"),
+        Arguments.of(valid.replace("\"contactPhone\":\"\"", "\"contactPhone\":\"123\""), "contactPhone"),
+        Arguments.of(valid.replace("\"contactPhone\":\"\"", "\"contactPhone\":\"1234567890\""), "contactPhone"));
   }
 
   private static String passenger(String name, int age, int seat) {
@@ -120,5 +143,14 @@ class BookingValidationTest {
         {"flightId":1,"contactEmail":"passenger@example.test",
          "contactPhone":"","passengers":[%s]}
         """.formatted(passengers);
+  }
+
+  private static String numberWord(int number) {
+    return switch (number) {
+      case 1 -> "One";
+      case 2 -> "Two";
+      case 3 -> "Three";
+      default -> "Four";
+    };
   }
 }

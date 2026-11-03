@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { EMAIL_DOMAIN_PATTERN, NAME_PATTERN } from '../../core/form-validators';
 
 @Component({
   standalone: true,
@@ -22,14 +23,14 @@ export class LoginComponent {
 
   readonly form = this.fb.nonNullable.group({
     name: [''],
-    email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
+    email: ['', [Validators.required, Validators.email, Validators.pattern(EMAIL_DOMAIN_PATTERN), Validators.maxLength(150)]],
     password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(72)]]
   });
 
   toggle(): void {
     this.registering.update(isRegistering => !isRegistering);
     this.form.controls.name.setValidators(this.registering()
-      ? [Validators.required, Validators.maxLength(100), Validators.pattern(/\S/)] : []);
+      ? [Validators.required, Validators.maxLength(100), Validators.pattern(NAME_PATTERN)] : []);
     this.form.controls.name.updateValueAndValidity();
     this.submitted.set(false);
     this.error.set('');
@@ -48,7 +49,7 @@ export class LoginComponent {
     this.busy.set(true);
 
     if (this.registering()) {
-      this.auth.register(name, email, password).subscribe({
+      this.auth.register(name.trim(), email.trim(), password).subscribe({
         next: () => {
           this.busy.set(false);
           this.registering.set(false);

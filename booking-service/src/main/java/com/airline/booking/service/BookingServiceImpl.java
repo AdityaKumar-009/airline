@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -58,12 +59,11 @@ public class BookingServiceImpl implements BookingService {
 
   @Override
   @Transactional(readOnly = true)
-  public List<AdminBookingResponse> adminBookings(Long flightId, BookingStatus status) {
-    if (flightId != null && flightId <= 0) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Flight ID must be positive");
-    }
+  public List<AdminBookingResponse> adminBookings(String flightNumber, BookingStatus status) {
+    String searchNumber = flightNumber == null ? "" : flightNumber.trim().toUpperCase(Locale.ROOT);
     return bookings.findAllByOrderByBookedAtDesc().stream()
-        .filter(b -> flightId == null || b.flightId.equals(flightId))
+        .filter(b -> searchNumber.isEmpty() || b.flightNumber != null
+            && b.flightNumber.toUpperCase(Locale.ROOT).equals(searchNumber))
         .filter(b -> status == null || b.status == status)
         .map(this::toAdminResponse).toList();
   }

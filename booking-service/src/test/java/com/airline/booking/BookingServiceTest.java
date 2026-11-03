@@ -32,11 +32,11 @@ class BookingServiceTest {
     Booking confirmed = sample(1L, 5L, 3, "ABCDEFGH");
     Booking cancelled = sample(2L, 5L, 4, "BCDEFGHJ");
     cancelled.status = BookingStatus.CANCELLED;
-    Booking otherFlight = sample(3L, 6L, 1, "CDEFGHJK");
+    Booking otherFlight = sample(3L, 6L, 1, "CDEFGHJK", "AI202");
     when(bookings.findAllByOrderByBookedAtDesc())
         .thenReturn(List.of(confirmed, cancelled, otherFlight));
 
-    var filtered = service.adminBookings(5L, BookingStatus.CANCELLED);
+    var filtered = service.adminBookings(" ai101 ", BookingStatus.CANCELLED);
     assertEquals(1, filtered.size());
     assertEquals(cancelled.pnr, filtered.get(0).pnr());
     assertEquals(BookingStatus.CANCELLED, filtered.get(0).status());
@@ -44,9 +44,13 @@ class BookingServiceTest {
   }
 
   private Booking sample(long userId, long flightId, int seat, String pnr) {
+    return sample(userId, flightId, seat, pnr, "AI101");
+  }
+
+  private Booking sample(long userId, long flightId, int seat, String pnr, String flightNumber) {
     LocalDateTime departure = LocalDateTime.now().plusDays(5);
     return new Booking(userId, flightId, seat, new BigDecimal("4500"), pnr,
-        "customer@example.test", null, "AI101", "Delhi", "Mumbai",
+        "customer@example.test", null, flightNumber, "Delhi", "Mumbai",
         "DEL", "BOM", departure, departure.plusHours(2));
   }
 }

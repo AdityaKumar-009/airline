@@ -1,0 +1,4 @@
+:host { display: block; width: 100%; min-width: 3rem; }
+.flight-path { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .35rem; color: var(--gold); }
+.path-line { border-top: 2px dotted currentColor; }
+app-airplane-icon { width: 1.15rem; height: 1.15rem; }

@@ -9,15 +9,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class BookingDtos {
+  private static final String NAME_PATTERN = "^ *[\\p{L}]+(?: +[\\p{L}]+)* *$";
+  private static final String EMAIL_PATTERN = "^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$";
+  private static final String INDIAN_PHONE_PATTERN = "^$|^[6-9][0-9]{9}$";
+
   public record PassengerInput(
-      @NotBlank @Size(max = 100) String fullName,
+      @NotBlank @Pattern(regexp = NAME_PATTERN) @Size(max = 100) String fullName,
       @Min(1) @Max(120) int age,
       @Min(1) int seatNumber) {}
 
   public record BookingRequest(
       @NotNull @Positive Long flightId,
-      @NotBlank @Email @Size(max = 150) String contactEmail,
-      @Pattern(regexp = "^$|^\\+?[0-9]{10,15}$") String contactPhone,
+      @NotBlank @Email @Pattern(regexp = EMAIL_PATTERN) @Size(max = 150) String contactEmail,
+      @Pattern(regexp = INDIAN_PHONE_PATTERN) String contactPhone,
       // Collection-level cascading avoids duplicate type annotations in older Eclipse compilers.
       @NotEmpty @Size(max = 4) @Valid List<PassengerInput> passengers) {}
 

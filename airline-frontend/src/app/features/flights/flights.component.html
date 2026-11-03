@@ -28,9 +28,10 @@
       <small class="field-error">Choose today or a future date.</small>
     }
   </label>
-  <button class="primary search-button" [disabled]="loading()">
+  <button class="primary search-button" [disabled]="loading() || form.invalid || isPastDate()">
     {{loading() ? 'Searching…' : 'Search flights'}}
   </button>
+  <button type="button" class="secondary clear-button" [disabled]="loading()" (click)="clearSearch()">Clear</button>
 </form>
 <datalist id="airports-origin">
   @for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
@@ -56,7 +57,7 @@
         <article class="panel flight-item">
           <div class="flight-airline">
             <div>
-              <strong>{{f.flightNumber}}</strong>
+              <strong><app-airplane-icon class="airline-icon" /> {{f.flightNumber}}</strong>
               <p class="muted">{{f.aircraftType}}</p>
             </div>
           </div>
@@ -66,7 +67,7 @@
               <strong>{{f.originCode || f.origin}}</strong>
               <span>{{f.origin}}</span>
             </div>
-            <div class="route-line" aria-hidden="true">→</div>
+            <app-flight-path />
             <div class="airport destination">
               <strong>{{f.destinationCode || f.destination}}</strong>
               <span>{{f.destination}}</span>

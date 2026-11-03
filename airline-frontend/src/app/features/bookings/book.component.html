@@ -9,7 +9,12 @@
     <div class="flight-item compact">
       <div>
         <strong>{{f.flightNumber}} · {{f.aircraftType}}</strong>
-        <p class="muted">{{f.originCode || f.origin}} → {{f.destinationCode || f.destination}} · {{f.departureTime.slice(0,16).replace('T',' ')}} UTC</p>
+        <div class="route-summary">
+          <div class="airport"><strong>{{f.originCode || f.origin}}</strong><span>{{f.origin}}</span></div>
+          <app-flight-path />
+          <div class="airport destination"><strong>{{f.destinationCode || f.destination}}</strong><span>{{f.destination}}</span></div>
+        </div>
+        <p class="muted">{{f.departureTime.slice(0,16).replace('T',' ')}} UTC</p>
       </div>
       <div><strong>₹{{f.price}}</strong><p class="muted">per passenger</p></div>
     </div>
@@ -80,21 +85,21 @@
           @if(form.controls.contactEmail.invalid && (form.controls.contactEmail.touched || form.controls.contactEmail.dirty)){
             <small class="field-error">
               @if(form.controls.contactEmail.hasError('required')){Enter a contact email.}
-              @else if(form.controls.contactEmail.hasError('email')){Enter a valid email address.}
+              @else if(form.controls.contactEmail.hasError('email') || form.controls.contactEmail.hasError('pattern')){Enter a valid email, such as name&#64;example.com.}
               @else{Email must be 150 characters or fewer.}
             </small>
           }
         </label>
         <label>Phone (optional)
-          <input type="tel" formControlName="contactPhone" placeholder="+919999999999" maxlength="16"
+          <input type="tel" formControlName="contactPhone" placeholder="9876543210" maxlength="10" inputmode="numeric"
             [attr.aria-invalid]="form.controls.contactPhone.invalid && (form.controls.contactPhone.touched || form.controls.contactPhone.dirty)" />
           @if(form.controls.contactPhone.invalid && (form.controls.contactPhone.touched || form.controls.contactPhone.dirty)){
-            <small class="field-error">Use 10–15 digits, with an optional leading +.</small>
+            <small class="field-error">Enter a 10-digit Indian mobile number starting with 6, 7, 8 or 9.</small>
           }
         </label>
         <div class="total-row"><strong>Total fare</strong><strong>₹{{total()}}</strong></div>
         @if(error()){<p class="error" role="alert">{{error()}}</p>}
-        <button type="submit" class="primary" [disabled]="busy() || !passengers().length">
+        <button type="submit" class="primary" [disabled]="!canReviewReservation()">
           {{busy()?'Processing…':'Review reservation'}}
         </button>
       </form>

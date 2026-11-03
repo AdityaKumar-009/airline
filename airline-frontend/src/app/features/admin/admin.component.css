@@ -1,10 +1,12 @@
+.admin-intro { min-height: 200px; display: flex; flex-direction: column; justify-content: center; margin: 0 0 2rem; padding: 2rem; border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(90deg, rgb(251 248 244 / 99%) 0%, rgb(251 248 244 / 92%) 48%, rgb(251 248 244 / 12%) 100%), url('/assets/images/admin-tower-art.jpg') center 56% / cover; }
+.admin-intro p { max-width: 48%; }
 .admin-tabs { display: flex; gap: 1.5rem; overflow-x: auto; margin-bottom: 2rem; border-bottom: 1px solid var(--border); scrollbar-width: thin; }
 .admin-tabs button { flex: 0 0 auto; min-height: 48px; padding: .75rem 0; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: .875rem; font-weight: 500; white-space: nowrap; }
 .admin-tabs button:hover, .admin-tabs button.active { color: var(--ink); }
-.admin-tabs button.active { border-bottom-color: var(--ink); }
+.admin-tabs button.active { border-bottom-color: var(--gold); color: var(--primary); }
 .admin-tabs button:focus-visible { outline-offset: -3px; }
 .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-.kpi { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; border: 0; background: var(--soft); }
+.kpi { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; border-top: 2px solid var(--gold); background: var(--surface); }
 .kpi .muted { min-height: 44px; margin: 0; font-size: .8125rem; }
 .kpi strong { font-size: clamp(1.5rem, 3vw, 2.5rem); font-weight: 500; letter-spacing: -.04em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .directory-panel { min-width: 0; }
@@ -23,11 +25,13 @@
 .admin-grid > button { min-height: 48px; margin-top: 1.75rem; }
 .admin-form > .error, .admin-form > .success { margin-top: 1.5rem; }
 .quick-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1.5rem; }
-.flight-admin-row { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.5rem 0; }
+.flight-admin-row { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.5rem; }
 .flight-admin-row > div { min-width: 0; }
 .flight-admin-row p { overflow-wrap: anywhere; }
+.admin-route { display: grid; grid-template-columns: auto minmax(3rem, 1fr) auto; align-items: center; gap: .75rem; max-width: 420px; color: var(--muted); }
+.admin-route small { grid-column: 1 / -1; }
 .flight-admin-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-.editor { margin-block: 1.5rem; border-color: #a9a9b0; }
+.editor { margin-block: 1.5rem; border-color: #b8a89d; }
 .editor .section-heading { margin: 0 0 .5rem; }
 .editor h2 { margin: 0; }
 .editor .admin-grid { margin-top: 1.5rem; }
@@ -45,6 +49,8 @@
 }
 
 @media (max-width: 640px) {
+  .admin-intro { min-height: 180px; padding: 1.5rem; background-position: 68% center; }
+  .admin-intro p { max-width: 78%; }
   .admin-grid { grid-template-columns: 1fr; }
   .admin-grid > button { margin-top: 0; }
   .kpi { padding: 1rem; }

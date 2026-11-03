@@ -3,10 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { Booking } from '../../core/models';
 import { ConfirmModalComponent } from '../../shared/confirm-modal.component';
+import { FlightPathComponent } from '../../shared/flight-path.component';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, ConfirmModalComponent],
+  imports: [RouterLink, ConfirmModalComponent, FlightPathComponent],
   templateUrl: './my-bookings.component.html',
   styleUrl: './my-bookings.component.css'
 })

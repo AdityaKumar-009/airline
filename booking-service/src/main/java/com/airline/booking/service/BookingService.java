@@ -11,7 +11,7 @@ public interface BookingService {
 
   List<BookingResponse> mine(Long userId);
 
-  List<AdminBookingResponse> adminBookings(Long flightId, BookingStatus status);
+  List<AdminBookingResponse> adminBookings(String flightNumber, BookingStatus status);
 
   BookingResponse book(Long userId, BookingRequest request);
 

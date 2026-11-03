@@ -1,7 +1,11 @@
 :host { display: block; }
-.booking-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, .8fr) auto auto; padding: 1.5rem 0; }
+.trips-intro { min-height: 190px; display: flex; flex-direction: column; justify-content: center; margin: 0 0 2rem; padding: 2rem; border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(90deg, rgb(251 248 244 / 99%) 0%, rgb(251 248 244 / 90%) 48%, rgb(251 248 244 / 14%) 100%), url('/assets/images/my-bookings-art.jpg') center 56% / cover; }
+.trips-intro p { max-width: 48%; }
+.booking-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, .8fr) auto auto; padding: 1.5rem; }
 .booking-row > div { min-width: 0; }
 .booking-row .muted { overflow-wrap: anywhere; }
+.booking-route { display: grid; grid-template-columns: minmax(0, auto) minmax(3rem, 1fr) minmax(0, auto); align-items: center; gap: .6rem; width: min(100%, 330px); margin-block: .5rem; color: var(--muted); font-size: .875rem; }
+.booking-route app-flight-path { min-width: 3rem; }
 .booking-controls { display: flex; align-items: center; gap: .5rem; }
 
 @media (max-width: 900px) {
@@ -9,6 +13,8 @@
   .booking-controls { justify-content: flex-end; flex-wrap: wrap; }
 }
 @media (max-width: 640px) {
+  .trips-intro { min-height: 180px; padding: 1.5rem; background-position: 68% center; }
+  .trips-intro p { max-width: 75%; }
   .booking-row > div:first-child, .booking-controls { grid-column: 1 / -1; }
   .booking-controls { justify-content: flex-start; }
   .booking-controls .secondary { flex: 1; }

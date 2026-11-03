@@ -1,7 +1,14 @@
 :host { display: block; }
+.profile-intro { min-height: 190px; display: flex; flex-direction: column; justify-content: center; margin: 0 0 2rem; padding: 2rem; border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(90deg, rgb(251 248 244 / 99%) 0%, rgb(251 248 244 / 92%) 48%, rgb(251 248 244 / 16%) 100%), url('/assets/images/profile-art.jpg') center 54% / cover; }
+.profile-intro .eyebrow { margin-bottom: .5rem; }
+.profile-intro h1, .profile-intro p { max-width: 50%; }
 .profile-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 2rem; }
 .profile-panel h2 { margin-bottom: 1.5rem; }
 .profile-panel button { justify-self: start; }
 .profile-panel .muted { margin: 0; font-size: .8125rem; }
 @media (max-width: 760px) { .profile-sections { grid-template-columns: 1fr; gap: 1.5rem; } }
-@media (max-width: 640px) { .profile-panel button { width: 100%; } }
+@media (max-width: 640px) {
+  .profile-panel button { width: 100%; }
+  .profile-intro { min-height: 180px; padding: 1.5rem; background-position: 64% center; }
+  .profile-intro h1, .profile-intro p { max-width: 76%; }
+}

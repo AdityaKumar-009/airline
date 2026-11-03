@@ -4,6 +4,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Booking, Flight } from '../../core/models';
 import { ConfirmModalComponent } from '../../shared/confirm-modal.component';
+import { EMAIL_DOMAIN_PATTERN, INDIAN_PHONE_PATTERN, NAME_PATTERN } from '../../core/form-validators';
+import { FlightPathComponent } from '../../shared/flight-path.component';
 
 interface DraftPassenger {
   seatNumber: number;
@@ -13,7 +15,7 @@ interface DraftPassenger {
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, ConfirmModalComponent],
+  imports: [ReactiveFormsModule, RouterLink, ConfirmModalComponent, FlightPathComponent],
   templateUrl: './book.component.html',
   styleUrl: './book.component.css'
 })
@@ -34,8 +36,8 @@ export class BookComponent implements OnInit {
     {length: Math.ceil((this.flight()?.capacity ?? 0) / 6)}, (_, i) => i + 1));
   readonly total = computed(() => (this.flight()?.price ?? 0) * this.passengers().length);
   readonly form = this.fb.nonNullable.group({
-    contactEmail: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
-    contactPhone: ['', [Validators.pattern(/^\+?[0-9]{10,15}$/)]]
+    contactEmail: ['', [Validators.required, Validators.email, Validators.pattern(EMAIL_DOMAIN_PATTERN), Validators.maxLength(150)]],
+    contactPhone: ['', [Validators.pattern(INDIAN_PHONE_PATTERN)]]
   });
 
   ngOnInit(): void {
@@ -92,12 +94,18 @@ export class BookComponent implements OnInit {
 
   passengerNameError(passenger: DraftPassenger): string {
     if (!passenger.fullName.trim()) return 'Enter the passenger’s full name.';
-    return passenger.fullName.length > 100 ? 'Use no more than 100 characters.' : '';
+    if (passenger.fullName.length > 100) return 'Use no more than 100 characters.';
+    return NAME_PATTERN.test(passenger.fullName.trim()) ? '' : 'Use letters and spaces only.';
   }
 
   passengerAgeError(passenger: DraftPassenger): string {
     return !Number.isInteger(passenger.age) || passenger.age < 1 || passenger.age > 120
       ? 'Enter a whole age from 1 to 120.' : '';
+  }
+
+  canReviewReservation(): boolean {
+    return !this.busy() && this.passengers().length > 0 && this.form.valid &&
+      this.passengers().every(p => !this.passengerNameError(p) && !this.passengerAgeError(p));
   }
 
   requestBooking(): void {

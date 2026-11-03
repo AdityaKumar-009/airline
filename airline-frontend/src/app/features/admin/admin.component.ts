@@ -5,12 +5,14 @@ import {
   AdminBooking, AdminCustomer, Airport, Flight, FlightActivity, FlightStatus, OperationalStatus
 } from '../../core/models';
 import { ConfirmModalComponent } from '../../shared/confirm-modal.component';
+import { ALPHANUMERIC_PATTERN } from '../../core/form-validators';
+import { FlightPathComponent } from '../../shared/flight-path.component';
 
 type AdminSection = 'overview' | 'flights' | 'customers' | 'bookings' | 'activity';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, ConfirmModalComponent],
+  imports: [ReactiveFormsModule, ConfirmModalComponent, FlightPathComponent],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
@@ -51,20 +53,20 @@ export class AdminComponent implements OnInit {
   readonly customerSearch = new FormControl('', {
     nonNullable: true, validators: [Validators.maxLength(150)]
   });
-  readonly bookingFlightId = new FormControl('', {
-    nonNullable: true, validators: [Validators.pattern(/^[1-9][0-9]{0,17}$/)]
+  readonly bookingFlightNumber = new FormControl('', {
+    nonNullable: true, validators: [Validators.maxLength(20), Validators.pattern(ALPHANUMERIC_PATTERN)]
   });
   readonly bookingStatus = new FormControl('ALL', {nonNullable: true});
 
   readonly form = this.fb.nonNullable.group({
-    flightNumber: ['', [Validators.required, Validators.maxLength(20), Validators.pattern(/\S/)]],
+    flightNumber: ['', [Validators.required, Validators.maxLength(20), Validators.pattern(ALPHANUMERIC_PATTERN)]],
     originCode: ['', Validators.required],
     destinationCode: ['', Validators.required],
     departureTime: ['', Validators.required],
     arrivalTime: ['', Validators.required],
     price: [4500, [Validators.required, Validators.min(0.01)]],
     capacity: [30, [Validators.required, Validators.min(1), Validators.max(300), Validators.pattern(/^\d+$/)]],
-    aircraftType: ['A320', [Validators.required, Validators.maxLength(40), Validators.pattern(/\S/)]]
+    aircraftType: ['A320', [Validators.required, Validators.maxLength(40), Validators.pattern(ALPHANUMERIC_PATTERN)]]
   });
   readonly editForm = this.fb.nonNullable.group({
     price: [4500, [Validators.required, Validators.min(0.01)]],
@@ -72,7 +74,7 @@ export class AdminComponent implements OnInit {
     operationalStatus: ['SCHEDULED', Validators.required],
     departureTime: ['', Validators.required],
     arrivalTime: ['', Validators.required],
-    aircraftType: ['A320', [Validators.required, Validators.maxLength(40), Validators.pattern(/\S/)]]
+    aircraftType: ['A320', [Validators.required, Validators.maxLength(40), Validators.pattern(ALPHANUMERIC_PATTERN)]]
   });
 
   sameAirports(): boolean {
@@ -150,11 +152,11 @@ export class AdminComponent implements OnInit {
 
   filterBookings(): void {
     this.bookingError.set('');
-    this.bookingFlightId.markAsTouched();
-    const raw = String(this.bookingFlightId.value).trim();
-    if (this.bookingFlightId.invalid) return;
+    this.bookingFlightNumber.markAsTouched();
+    const raw = this.bookingFlightNumber.value.trim();
+    if (this.bookingFlightNumber.invalid) return;
     let params = new HttpParams();
-    if (raw) params = params.set('flightId', raw);
+    if (raw) params = params.set('flightNumber', raw);
     if (this.bookingStatus.value !== 'ALL') params = params.set('status', this.bookingStatus.value);
     this.bookingLoading.set(true);
     this.http.get<AdminBooking[]>('/api/bookings/admin', {params}).subscribe({
@@ -164,7 +166,7 @@ export class AdminComponent implements OnInit {
   }
 
   clearBookingFilters(): void {
-    this.bookingFlightId.setValue('');
+    this.bookingFlightNumber.setValue('');
     this.bookingStatus.setValue('ALL');
     this.filterBookings();
   }

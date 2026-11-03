@@ -1,4 +1,4 @@
-<section class="intro"><h1>My bookings</h1><p class="muted">Your reservations, passenger details, PNRs and itineraries.</p></section>
+<section class="intro trips-intro"><h1>My bookings</h1><p class="muted">Your reservations, passenger details, PNRs and itineraries.</p></section>
 @if(error()){<p class="error" role="alert">{{error()}}</p>}
 @if(loading()){<p class="muted">Loading bookings…</p>}
 @else if(!bookings().length){<div class="panel empty">No bookings yet. <a routerLink="/flights">Find a flight</a>.</div>}
@@ -8,7 +8,11 @@
       <article class="panel booking-row">
         <div>
           <strong>{{b.flightNumber || ('Flight #'+b.flightId)}}</strong>
-          <p class="muted">{{b.originCode || b.origin || 'Origin'}} → {{b.destinationCode || b.destination || 'Destination'}}</p>
+          <div class="booking-route">
+            <span>{{b.originCode || b.origin || 'Origin'}}</span>
+            <app-flight-path />
+            <span>{{b.destinationCode || b.destination || 'Destination'}}</span>
+          </div>
           <p class="muted">PNR: <strong>{{b.pnr}}</strong> · {{b.passengers.length}} passenger(s)</p>
         </div>
         <div><strong>₹{{b.totalFare}}</strong><p class="muted">Booked {{b.bookedAt.slice(0,10)}}</p></div>

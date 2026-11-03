@@ -16,8 +16,8 @@ public class BookingController {
   @GetMapping("/me") @SecurityRequirement(name="bearerAuth") public List<BookingResponse> mine(JwtAuthenticationToken jwt){return service.mine(Long.valueOf(jwt.getToken().getSubject()));}
   @GetMapping("/admin") @SecurityRequirement(name="bearerAuth")
   public List<AdminBookingResponse> adminBookings(
-      @RequestParam(required=false) Long flightId,
-      @RequestParam(required=false) BookingStatus status){return service.adminBookings(flightId,status);}
+      @RequestParam(required=false) String flightNumber,
+      @RequestParam(required=false) BookingStatus status){return service.adminBookings(flightNumber,status);}
   @PostMapping @ResponseStatus(HttpStatus.CREATED) @SecurityRequirement(name="bearerAuth") public BookingResponse book(JwtAuthenticationToken jwt,@Valid @RequestBody BookingRequest r){
     return service.book(Long.valueOf(jwt.getToken().getSubject()),r);
   }

@@ -1,22 +1,22 @@
-.flight-hero { padding: 1.5rem 0 3rem; text-align: center; }
-.hero-copy { max-width: 720px; margin-inline: auto; }
+.flight-hero { display: flex; min-height: 290px; align-items: center; margin-bottom: 1.5rem; padding: clamp(1.5rem, 5vw, 3.5rem); border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(90deg, rgb(251 248 244 / 98%) 0%, rgb(251 248 244 / 92%) 38%, rgb(251 248 244 / 8%) 100%), url('/assets/images/flight-search-art.jpg') center 52% / cover; text-align: left; }
+.hero-copy { width: min(100%, 560px); }
 .hero-copy h1 { font-size: clamp(2.5rem, 5vw, 4rem); }
-.hero-copy p { max-width: 50ch; margin: 1rem auto 0; color: var(--muted); font-size: 1.0625rem; }
-.search-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: start; gap: 1rem; padding: 1.5rem; border: 0; background: var(--soft); }
-.search-button { min-height: 48px; margin-top: 1.75rem; }
+.hero-copy p { max-width: 50ch; margin: 1rem 0 0; color: var(--muted); font-size: 1.0625rem; }
+.search-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto; align-items: start; gap: 1rem; padding: 1.5rem; border-top: 3px solid var(--gold); background: var(--surface); }
+.search-button, .clear-button { min-height: 48px; margin-top: 1.75rem; }
 .results-section { margin-top: 3rem; }
 .results-section .section-heading { margin-top: 0; }
 .result-count { color: var(--muted); font-size: .875rem; white-space: nowrap; }
-.flight-item { display: grid; grid-template-columns: .8fr 1.5fr 1.2fr .7fr auto; grid-template-areas: "airline route schedule price action"; gap: 1.5rem; padding: 1.5rem 0; }
+.flight-item { display: grid; grid-template-columns: .8fr 1.5fr 1.2fr .7fr auto; grid-template-areas: "airline route schedule price action"; gap: 1.5rem; padding: 1.5rem; }
 .flight-item > * { min-width: 0; }
 .flight-airline { grid-area: airline; }
 .flight-airline strong { font-size: .9375rem; }
-.flight-route { grid-area: route; display: grid; grid-template-columns: 1fr 48px 1fr; align-items: center; gap: 1rem; }
+.flight-route { grid-area: route; display: grid; grid-template-columns: minmax(0, 1fr) minmax(3rem, .7fr) minmax(0, 1fr); align-items: center; gap: 1rem; }
 .airport { display: flex; flex-direction: column; gap: .25rem; }
 .airport strong { font-size: 1.375rem; letter-spacing: -.03em; }
 .airport span, .flight-schedule span, .flight-price span { color: var(--muted); font-size: .8125rem; }
 .destination { text-align: right; }
-.route-line { color: #87878e; text-align: center; }
+.airline-icon { color: var(--gold); }
 .flight-schedule { grid-area: schedule; display: flex; flex-direction: column; gap: .25rem; }
 .flight-schedule strong { font-size: .9375rem; font-variant-numeric: tabular-nums; }
 .flight-price { grid-area: price; display: flex; flex-direction: column; gap: .25rem; white-space: nowrap; }
@@ -33,11 +33,12 @@
 }
 
 @media (max-width: 640px) {
-  .flight-hero { padding: .5rem 0 2rem; text-align: left; }
+  .flight-hero { min-height: 280px; padding: 1.5rem; background-image: linear-gradient(90deg, rgb(251 248 244 / 98%) 0%, rgb(251 248 244 / 90%) 62%, rgb(251 248 244 / 40%) 100%), url('/assets/images/flight-search-art.jpg'); background-position: 64% center; }
+  .hero-copy { width: 85%; }
   .hero-copy p { font-size: 1rem; }
   .search-grid { grid-template-columns: 1fr; padding: 1.5rem; gap: 1.5rem; }
-  .search-button { width: 100%; margin-top: 0; }
+  .search-button, .clear-button { width: 100%; margin-top: 0; }
   .results-section { margin-top: 2rem; }
   .flight-item { grid-template-columns: 1fr 1fr; grid-template-areas: "airline airline" "route route" "schedule price" "action action"; }
-  .flight-route { grid-template-columns: 1fr 48px 1fr; }
+  .flight-route { grid-template-columns: minmax(0, 1fr) minmax(2rem, .7fr) minmax(0, 1fr); gap: .5rem; }
 }

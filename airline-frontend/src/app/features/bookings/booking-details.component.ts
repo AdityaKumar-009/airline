@@ -2,10 +2,11 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Booking, Flight, OperationalStatus } from '../../core/models';
+import { FlightPathComponent } from '../../shared/flight-path.component';
 
 @Component({
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, FlightPathComponent],
   templateUrl: './booking-details.component.html',
   styleUrl: './booking-details.component.css'
 })

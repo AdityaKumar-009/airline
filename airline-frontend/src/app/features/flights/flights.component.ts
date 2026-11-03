@@ -4,10 +4,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Airport, Flight } from '../../core/models';
 import { AuthService } from '../../core/auth.service';
+import { FlightPathComponent } from '../../shared/flight-path.component';
+import { AirplaneIconComponent } from '../../shared/airplane-icon.component';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, FlightPathComponent, AirplaneIconComponent],
   templateUrl: './flights.component.html',
   styleUrl: './flights.component.css'
 })
@@ -51,6 +53,11 @@ export class FlightsComponent implements OnInit {
       next: flights => { this.flights.set(flights); this.loading.set(false); },
       error: () => { this.error.set('Unable to load flights. Check backend services.'); this.loading.set(false); }
     });
+  }
+
+  clearSearch(): void {
+    this.form.reset({origin: '', destination: '', date: ''});
+    this.search();
   }
 
   isPastDate(): boolean {

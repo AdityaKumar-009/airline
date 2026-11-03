@@ -1,4 +1,10 @@
-<section class="auth-layout">
+<section class="auth-layout" [class.registering]="registering()">
+  <div class="auth-visual" aria-hidden="true">
+    <div class="auth-visual-copy">
+      <span class="eyebrow">Travel, thoughtfully</span>
+      <p>A little closer to somewhere new.</p>
+    </div>
+  </div>
   <div class="auth-card">
     <span class="eyebrow">AirlineMS account</span>
     <h1>{{registering() ? 'Create your account' : 'Welcome back'}}</h1>
@@ -12,7 +18,11 @@
             aria-describedby="account-name-error"
             [attr.aria-invalid]="form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty || submitted())" />
           @if(form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty || submitted())){
-            <small id="account-name-error" class="field-error">Enter a name with at most 100 characters.</small>
+            <small id="account-name-error" class="field-error">
+              @if(form.controls.name.hasError('required')){Enter your full name.}
+              @else if(form.controls.name.hasError('pattern')){Use letters and spaces only.}
+              @else{Use no more than 100 characters.}
+            </small>
           }
         </div>
       }
@@ -24,7 +34,7 @@
         @if(form.controls.email.invalid && (form.controls.email.touched || form.controls.email.dirty || submitted())){
           <small id="account-email-error" class="field-error">
             @if(form.controls.email.hasError('required')){Enter your email address.}
-            @else if(form.controls.email.hasError('email')){Enter a valid email address.}
+            @else if(form.controls.email.hasError('email') || form.controls.email.hasError('pattern')){Enter a valid email, such as name&#64;example.com.}
             @else{Email must be 150 characters or fewer.}
           </small>
         }
@@ -45,7 +55,7 @@
       </div>
       @if(error()){<p class="error" role="alert">{{error()}}</p>}
       @if(success()){<p class="success" role="status">{{success()}}</p>}
-      <button class="primary wide" [disabled]="busy()">
+      <button class="primary wide" [disabled]="busy() || form.invalid">
         {{busy() ? 'Please wait…' : registering() ? 'Create account' : 'Sign in'}}
       </button>
     </form>

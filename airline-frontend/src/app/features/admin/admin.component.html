@@ -1,4 +1,4 @@
-<section class="intro">
+<section class="intro admin-intro">
   <h1>Airline administration</h1>
   <p class="muted">Manage flight operations, reservations and customer records from one dashboard.</p>
 </section>
@@ -16,12 +16,11 @@
     <div class="panel kpi"><span class="muted">Upcoming flights open for sale</span><strong>{{upcomingFlights()}}</strong></div>
     <div class="panel kpi"><span class="muted">Active reservations</span><strong>{{activeReservations()}}</strong></div>
     <div class="panel kpi"><span class="muted">Seats reserved</span><strong>{{seatsReserved()}}</strong></div>
-    <div class="panel kpi"><span class="muted">Active booking value (INR)</span><strong>₹{{bookedValue()}}</strong></div>
+    <div class="panel kpi"><span class="muted">Active reservation value (INR)</span><strong>₹{{bookedValue()}}</strong></div>
   </section>
   <section class="panel directory-panel">
     <h2>Quick overview</h2>
     <p class="muted">Customers: {{customers().length}} · Total scheduled and historical flights: {{flights().length}}</p>
-    <p class="muted">Amounts reflect reservation values only. The demo does not collect payments.</p>
     <div class="quick-actions">
       <button type="button" class="secondary" (click)="section.set('flights')">Manage flights</button>
       <button type="button" class="secondary" (click)="section.set('bookings')">Review reservations</button>
@@ -35,11 +34,12 @@
     <h2>Add a flight</h2>
     <form [formGroup]="form" (ngSubmit)="add()" class="admin-grid">
       <label>Flight number
-        <input formControlName="flightNumber" placeholder="AI109" maxlength="20"
+        <input formControlName="flightNumber" placeholder="AI109" maxlength="20" pattern="[A-Za-z0-9]+"
           [attr.aria-invalid]="form.controls.flightNumber.invalid && (form.controls.flightNumber.touched || form.controls.flightNumber.dirty)" />
         @if((form.controls.flightNumber.touched || form.controls.flightNumber.dirty) && form.controls.flightNumber.invalid){
           <small class="field-error">
-            @if(form.controls.flightNumber.hasError('required') || form.controls.flightNumber.hasError('pattern')){Enter a flight number.}
+            @if(form.controls.flightNumber.hasError('required')){Enter a flight number.}
+            @else if(form.controls.flightNumber.hasError('pattern')){Use letters and numbers only.}
             @else{Use no more than 20 characters.}
           </small>
         }
@@ -99,13 +99,17 @@
         }
       </label>
       <label>Aircraft type
-        <input formControlName="aircraftType" placeholder="A320" maxlength="40"
+        <input formControlName="aircraftType" placeholder="A320" maxlength="40" pattern="[A-Za-z0-9]+"
           [attr.aria-invalid]="form.controls.aircraftType.invalid && (form.controls.aircraftType.touched || form.controls.aircraftType.dirty)" />
         @if((form.controls.aircraftType.touched || form.controls.aircraftType.dirty) && form.controls.aircraftType.invalid){
-          <small class="field-error">Enter an aircraft type up to 40 characters.</small>
+          <small class="field-error">
+            @if(form.controls.aircraftType.hasError('required')){Enter an aircraft type.}
+            @else if(form.controls.aircraftType.hasError('pattern')){Use letters and numbers only.}
+            @else{Use no more than 40 characters.}
+          </small>
         }
       </label>
-      <button class="primary" [disabled]="savingFlight()">{{savingFlight()?'Adding…':'Add flight'}}</button>
+      <button class="primary" [disabled]="savingFlight() || form.invalid || sameAirports() || departureInPast() || arrivalBeforeDeparture()">{{savingFlight()?'Adding…':'Add flight'}}</button>
     </form>
     @if(error()){<p class="error" role="alert">{{error()}}</p>}
     @if(success()){<p class="success" role="status">{{success()}}</p>}
@@ -155,13 +159,17 @@
           }
         </label>
         <label>Aircraft type
-          <input formControlName="aircraftType" maxlength="40"
+          <input formControlName="aircraftType" maxlength="40" pattern="[A-Za-z0-9]+"
             [attr.aria-invalid]="editForm.controls.aircraftType.invalid && (editForm.controls.aircraftType.touched || editForm.controls.aircraftType.dirty)" />
           @if((editForm.controls.aircraftType.touched || editForm.controls.aircraftType.dirty) && editForm.controls.aircraftType.invalid){
-            <small class="field-error">Enter an aircraft type up to 40 characters.</small>
+            <small class="field-error">
+              @if(editForm.controls.aircraftType.hasError('required')){Enter an aircraft type.}
+              @else if(editForm.controls.aircraftType.hasError('pattern')){Use letters and numbers only.}
+              @else{Use no more than 40 characters.}
+            </small>
           }
         </label>
-        <button class="primary" type="submit" [disabled]="savingFlight()">{{savingFlight()?'Saving…':'Save changes'}}</button>
+        <button class="primary" type="submit" [disabled]="savingFlight() || editForm.invalid || editDepartureInPast() || editArrivalBeforeDeparture()">{{savingFlight()?'Saving…':'Save changes'}}</button>
       </form>
       @if(error()){<p class="error" role="alert">{{error()}}</p>}
     </section>
@@ -176,7 +184,7 @@
         <article class="panel flight-admin-row">
           <div>
             <strong>{{f.flightNumber}}</strong>
-            <p class="muted">{{f.originCode || f.origin}} → {{f.destinationCode || f.destination}} · {{f.aircraftType}}</p>
+            <div class="admin-route"><span>{{f.originCode || f.origin}}</span><app-flight-path /><span>{{f.destinationCode || f.destination}}</span><small>{{f.aircraftType}}</small></div>
             <p class="muted">{{f.departureTime.slice(0,16).replace('T',' ')}} UTC · {{f.capacity}} seats</p>
           </div>
           <div><span class="pill">{{f.operationalStatus}}</span><p class="muted">Sales: {{f.status}}</p></div>
@@ -233,12 +241,16 @@
     <div class="section-heading directory-heading">
       <div><h2>Reservations</h2><p class="muted">Read-only booking records for all customers.</p></div>
       <div class="booking-filters">
-        <label>Flight ID
-          <input type="number" min="1" step="1" [formControl]="bookingFlightId"
+        <label>Flight number
+          <input type="text" aria-label="Flight number" maxlength="20" pattern="[A-Za-z0-9]+" [formControl]="bookingFlightNumber"
             (keydown.enter)="filterBookings()" placeholder="All flights"
-            [attr.aria-invalid]="bookingFlightId.invalid && (bookingFlightId.touched || bookingFlightId.dirty)" />
-          @if(bookingFlightId.invalid && (bookingFlightId.touched || bookingFlightId.dirty)){
-            <small class="field-error">Enter a positive whole ID (up to 18 digits), or leave blank.</small>
+            [attr.aria-invalid]="bookingFlightNumber.invalid && (bookingFlightNumber.touched || bookingFlightNumber.dirty)"
+            [attr.aria-describedby]="bookingFlightNumber.invalid && (bookingFlightNumber.touched || bookingFlightNumber.dirty) ? 'reservation-flight-number-error' : null" />
+          @if(bookingFlightNumber.invalid && (bookingFlightNumber.touched || bookingFlightNumber.dirty)){
+            <small id="reservation-flight-number-error" class="field-error">
+              @if(bookingFlightNumber.hasError('pattern')){Use letters and numbers only.}
+              @else{Use no more than 20 characters.}
+            </small>
           }
         </label>
         <label>Status
@@ -247,7 +259,7 @@
             <option value="CANCELLED">Cancelled</option>
           </select>
         </label>
-        <button type="button" class="secondary" (click)="filterBookings()">Filter</button>
+        <button type="button" class="secondary" [disabled]="bookingFlightNumber.invalid || bookingLoading()" (click)="filterBookings()">Filter</button>
         <button type="button" class="text-button" (click)="clearBookingFilters()">Clear</button>
       </div>
     </div>
