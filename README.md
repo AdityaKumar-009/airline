@@ -1,5 +1,7 @@
 # Airline Management System
 
+**Expanded classroom edition:** visual seats, multi-passenger bookings, unique PNRs, printable itineraries, airport codes, flight scheduling and cancellation, admin summaries, and password updates. See [Expanded Features Guide](docs/FEATURE_EXPANSION.md). The older guides below explain the original simpler version.
+
 Beginner-friendly Java 17 + Spring Boot + Eureka + Gateway + 3 microservices + MySQL + Angular 19 demo.
 
 Customers can update their display name and review their own bookings. Admins can manage flights and use read-only, searchable customer and booking reports; these features stay inside the existing Auth and Booking services.
