@@ -1,0 +1,39 @@
+name: Booking validation regression
+
+on:
+  push:
+    paths: ['booking-service/**', 'pom.xml', '.github/workflows/booking-validation.yml']
+  pull_request:
+    paths: ['booking-service/**', 'pom.xml', '.github/workflows/booking-validation.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17.0.12+7'
+          cache: maven
+      - name: Test booking requests with javac
+        run: mvn -B -ntp -pl booking-service -am clean test
+      - name: Compile booking DTOs with the older Eclipse compiler
+        run: |
+          mvn -B -ntp -pl booking-service dependency:build-classpath -Dmdep.outputFile=target/validation-classpath.txt
+          mvn -B -ntp dependency:get -Dartifact=org.eclipse.jdt:ecj:3.28.0
+          java -jar "$HOME/.m2/repository/org/eclipse/jdt/ecj/3.28.0/ecj-3.28.0.jar" \
+            -17 -proc:none -parameters \
+            -cp "$(cat booking-service/target/validation-classpath.txt)" \
+            -d booking-service/target/classes \
+            booking-service/src/main/java/com/airline/booking/domain/BookingStatus.java \
+            booking-service/src/main/java/com/airline/booking/domain/FlightStatus.java \
+            booking-service/src/main/java/com/airline/booking/dto/BookingDtos.java
+      - name: Test HTTP validation using Eclipse-compiled DTOs
+        # Skip the compile lifecycle so javac cannot overwrite the Eclipse class files.
+        run: mvn -B -ntp -pl booking-service surefire:test

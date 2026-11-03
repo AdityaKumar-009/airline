@@ -18,7 +18,8 @@ public class BookingDtos {
       @NotNull @Positive Long flightId,
       @NotBlank @Email @Size(max = 150) String contactEmail,
       @Pattern(regexp = "^$|^\\+?[0-9]{10,15}$") String contactPhone,
-      @NotEmpty @Size(max = 4) List<@Valid PassengerInput> passengers) {}
+      // Collection-level cascading avoids duplicate type annotations in older Eclipse compilers.
+      @NotEmpty @Size(max = 4) @Valid List<PassengerInput> passengers) {}
 
   public record PassengerResponse(Long id, String fullName, int age, int seatNumber,
                                   String seatCode, BigDecimal fare) {}

@@ -206,6 +206,22 @@ mvn clean package
 
 If Eclipse says it cannot find `keys/public.pem` or `keys/private.pem`, first verify that the files exist and that the launch configuration's Working Directory is exactly `D:\Airline`.
 
+### Booking fails with `Duplicate annotation ... jakarta.validation.Valid`
+
+Older Eclipse compilers can generate duplicate runtime annotations for a record component written as `List<@Valid PassengerInput>`. The Booking DTO uses `@Valid List<PassengerInput>` instead. This still validates every passenger, while avoiding that compiler bug. Keep `@Valid` on the controller's request body too.
+
+After pulling this fix, stop `BookingApplication` before rebuilding. In Eclipse choose **Project → Clean**, select `booking-service`, and rebuild it. Restart `BookingApplication`; refreshing the browser alone cannot replace the loaded Java class.
+
+To verify a clean Maven build independently of Eclipse, stop the Eclipse booking process and run these commands from the repository root while the other services and MySQL remain running:
+
+```powershell
+git pull origin main
+mvn -pl booking-service -am clean package
+java -jar booking-service/target/booking-service-1.0.0.jar
+```
+
+The booking regression workflow tests the same HTTP requests with both javac and the Eclipse 2021-12 compiler. Valid one- and four-passenger requests must reach the booking service; invalid passenger names, ages, seats, and contact details must return HTTP 400 before any booking is created.
+
 ## 7. VS Code setup and run
 
 1. Install the Java Extension Pack and, optionally, Spring Boot Extension Pack.
@@ -297,6 +313,7 @@ Scripts automate installation and routine commands; they are **not** imported by
 | MySQL connection refused | Confirm **MySQL Server**, not only Workbench, is running on port 3306. Check the local username/password and `DB_PASSWORD`. |
 | `Unknown database airline_*` | Run `database/create-databases.sql` in Workbench or grant permission for the JDBC URL to create schemas. |
 | JPA says a table/column is missing | Check the service startup logs for Flyway migrations and confirm the service connects to its own schema. |
+| Booking throws `Duplicate annotation ... jakarta.validation.Valid` | Pull the booking validation fix, stop Booking, clean/rebuild its Java classes, and restart it. See the Eclipse section above. |
 | `keys/*.pem` not found | Generate keys from the repository root; in Eclipse/VS Code launch configurations, set working directory to root. |
 | Gateway says no instance is available | Wait until the three business services appear UP in Eureka; start Gateway after them. The local registry refresh interval is five seconds. |
 | Website is blank on port 8080 | Re-run `scripts/package-demo.ps1` so Angular's latest browser assets are copied into Gateway before rebuilding it. |
