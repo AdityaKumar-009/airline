@@ -1,79 +1,208 @@
-  <section class="intro"><h1>Administration</h1><p class="muted">Manage flights and review customer and booking records.</p></section>
+<section class="intro">
+  <h1>Airline administration</h1>
+  <p class="muted">Manage flight operations, reservations and customer records from one dashboard.</p>
+</section>
 
-  <nav class="admin-tabs" aria-label="Administration sections">
-    <button type="button" [class.active]="section()==='flights'" (click)="section.set('flights')">Flights</button>
-    <button type="button" [class.active]="section()==='customers'" (click)="section.set('customers')">Customers</button>
-    <button type="button" [class.active]="section()==='bookings'" (click)="section.set('bookings')">Bookings</button>
-  </nav>
+<nav class="admin-tabs" aria-label="Administration sections">
+  <button type="button" [class.active]="section()==='overview'" (click)="section.set('overview')">Overview</button>
+  <button type="button" [class.active]="section()==='flights'" (click)="section.set('flights')">Flights</button>
+  <button type="button" [class.active]="section()==='customers'" (click)="section.set('customers')">Customers</button>
+  <button type="button" [class.active]="section()==='bookings'" (click)="section.set('bookings')">Reservations</button>
+  <button type="button" [class.active]="section()==='activity'" (click)="section.set('activity')">Activity</button>
+</nav>
 
-  @if(section()==='flights'){
-    <section class="panel admin-form"><h2>Add a flight</h2>
-      <form [formGroup]="form" (ngSubmit)="add()" class="admin-grid">
-        <label>Flight number<input formControlName="flightNumber" placeholder="AI109"/></label>
-        <label>From<input formControlName="origin" placeholder="Delhi"/></label>
-        <label>To<input formControlName="destination" placeholder="Mumbai"/></label>
-        <label>Departure (UTC)<input type="datetime-local" formControlName="departureTime"/></label>
-        <label>Arrival (UTC)<input type="datetime-local" formControlName="arrivalTime"/></label>
-        <label>Price (INR)<input type="number" formControlName="price" min="0.01"/></label>
-        <label>Seats<input type="number" formControlName="capacity" min="1" max="300"/></label>
-        <button class="primary">Add flight</button>
+@if(section()==='overview'){
+  <section class="kpi-grid" aria-label="Airline overview">
+    <div class="panel kpi"><span class="muted">Upcoming flights open for sale</span><strong>{{upcomingFlights()}}</strong></div>
+    <div class="panel kpi"><span class="muted">Active reservations</span><strong>{{activeReservations()}}</strong></div>
+    <div class="panel kpi"><span class="muted">Seats reserved</span><strong>{{seatsReserved()}}</strong></div>
+    <div class="panel kpi"><span class="muted">Active booking value (INR)</span><strong>₹{{bookedValue()}}</strong></div>
+  </section>
+  <section class="panel directory-panel">
+    <h2>Quick overview</h2>
+    <p class="muted">Customers: {{customers().length}} · Total scheduled and historical flights: {{flights().length}}</p>
+    <p class="muted">Amounts reflect reservation values only. The demo does not collect payments.</p>
+    <div class="quick-actions">
+      <button type="button" class="secondary" (click)="section.set('flights')">Manage flights</button>
+      <button type="button" class="secondary" (click)="section.set('bookings')">Review reservations</button>
+      <button type="button" class="secondary" (click)="section.set('activity')">View activity</button>
+    </div>
+  </section>
+}
+
+@if(section()==='flights'){
+  <section class="panel admin-form">
+    <h2>Add a flight</h2>
+    <form [formGroup]="form" (ngSubmit)="add()" class="admin-grid">
+      <label>Flight number<input formControlName="flightNumber" placeholder="AI109" maxlength="20" /></label>
+      <label>From airport
+        <select formControlName="originCode">
+          <option value="">Select airport</option>
+          @for(a of airports();track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
+        </select>
+      </label>
+      <label>To airport
+        <select formControlName="destinationCode">
+          <option value="">Select airport</option>
+          @for(a of airports();track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
+        </select>
+      </label>
+      <label>Departure (UTC)<input type="datetime-local" formControlName="departureTime" /></label>
+      <label>Arrival (UTC)<input type="datetime-local" formControlName="arrivalTime" /></label>
+      <label>Fare (INR)<input type="number" formControlName="price" min="0.01" /></label>
+      <label>Seats<input type="number" formControlName="capacity" min="1" max="300" /></label>
+      <label>Aircraft type<input formControlName="aircraftType" placeholder="A320" maxlength="40" /></label>
+      <button class="primary" [disabled]="form.invalid">Add flight</button>
+    </form>
+    @if(error()){<p class="error" role="alert">{{error()}}</p>}
+    @if(success()){<p class="success" role="status">{{success()}}</p>}
+  </section>
+
+  @if(editFlight();as selected){
+    <section class="panel admin-form editor">
+      <div class="section-heading"><h2>Edit {{selected.flightNumber}}</h2>
+        <button type="button" class="text-button" (click)="editFlight.set(null)">Close</button></div>
+      <p class="muted">Schedule changes are blocked while this flight has active seat reservations.</p>
+      <form class="admin-grid" [formGroup]="editForm" (ngSubmit)="saveEdit()">
+        <label>Fare (INR)<input type="number" min="0.01" formControlName="price" /></label>
+        <label>Sales status
+          <select formControlName="status"><option value="OPEN">Open</option><option value="CLOSED">Closed</option></select>
+        </label>
+        <label>Flight operation
+          <select formControlName="operationalStatus">
+            <option value="SCHEDULED">Scheduled</option>
+            <option value="DELAYED">Delayed</option>
+            <option value="CANCELLED">Cancelled</option>
+            <option value="DEPARTED">Departed</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
+        </label>
+        <label>Departure (UTC)<input type="datetime-local" formControlName="departureTime" /></label>
+        <label>Arrival (UTC)<input type="datetime-local" formControlName="arrivalTime" /></label>
+        <label>Aircraft type<input formControlName="aircraftType" maxlength="40" /></label>
+        <button class="primary" type="submit" [disabled]="editForm.invalid">Save changes</button>
       </form>
       @if(error()){<p class="error" role="alert">{{error()}}</p>}
-      @if(success()){<p class="success" role="status">{{success()}}</p>}
     </section>
-    <div class="section-heading"><h2>Upcoming flights</h2></div>
-    @if(flightLoading()){<p class="muted">Loading flights…</p>}
-    @else if(!flights().length){<div class="panel empty">No flights are available.</div>}
-    @else{<div class="flight-list">@for(f of flights();track f.id){
-      <article class="panel booking-row"><div><strong>{{f.flightNumber}}</strong><p class="muted">{{f.origin}} → {{f.destination}}</p></div>
-        <div><strong>₹{{f.price}}</strong><p class="muted">{{f.departureTime.slice(0,16).replace('T',' ')}} UTC</p></div>
-        <span class="pill">{{f.status}}</span>
-        <button class="secondary" (click)="requestToggle(f)">{{f.status==='OPEN'?'Close sales':'Open sales'}}</button>
-      </article>}
-    </div>}
   }
 
-  @if(section()==='customers'){
-    <section class="panel directory-panel">
-      <div class="section-heading directory-heading"><div><h2>Customers</h2><p class="muted">Customer accounts only. Passwords and credentials are never included.</p></div>
-        <div class="directory-search">
-          <label for="customer-search">Search name or email</label>
-          <div class="filter-control"><input id="customer-search" [formControl]="customerSearch" (keydown.enter)="searchCustomers()" placeholder="Name or email"/><button type="button" class="secondary" (click)="searchCustomers()">Search</button></div>
+  <div class="section-heading"><h2>Flight schedule</h2></div>
+  @if(flightLoading()){<p class="muted">Loading flights…</p>}
+  @else if(!flights().length){<div class="panel empty">No flights found.</div>}
+  @else{
+    <div class="flight-list">
+      @for(f of flights();track f.id){
+        <article class="panel flight-admin-row">
+          <div>
+            <strong>{{f.flightNumber}}</strong>
+            <p class="muted">{{f.originCode || f.origin}} → {{f.destinationCode || f.destination}} · {{f.aircraftType}}</p>
+            <p class="muted">{{f.departureTime.slice(0,16).replace('T',' ')}} UTC · {{f.capacity}} seats</p>
+          </div>
+          <div><span class="pill">{{f.operationalStatus}}</span><p class="muted">Sales: {{f.status}}</p></div>
+          <div class="flight-admin-actions">
+            <button type="button" class="secondary" (click)="beginEdit(f)">Edit</button>
+            @if(f.operationalStatus!=='CANCELLED' && f.operationalStatus!=='DEPARTED' && f.operationalStatus!=='COMPLETED'){
+              <button type="button" class="secondary" (click)="requestToggle(f)">
+                {{f.status==='OPEN'?'Close sales':'Open sales'}}
+              </button>
+              <button type="button" class="text-button" (click)="requestCancel(f)">Cancel flight</button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+}
+
+@if(section()==='customers'){
+  <section class="panel directory-panel">
+    <div class="section-heading directory-heading">
+      <div><h2>Customers</h2><p class="muted">Only account names, emails and joining dates are shown.</p></div>
+      <div class="directory-search">
+        <label for="customer-search">Search name or email</label>
+        <div class="filter-control">
+          <input id="customer-search" [formControl]="customerSearch" (keydown.enter)="searchCustomers()" placeholder="Name or email" />
+          <button type="button" class="secondary" (click)="searchCustomers()">Search</button>
         </div>
       </div>
-      @if(customerError()){<p class="error" role="alert">{{customerError()}}</p>}
-      @if(customerLoading()){<p class="muted">Loading customers…</p>}
-      @else if(!customers().length){<div class="empty compact">No customers found.</div>}
-      @else{<div class="table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Joined (UTC)</th></tr></thead><tbody>
-        @for(customer of customers();track customer.id){<tr><td>{{customer.id}}</td><td>{{customer.name}}</td><td><a [href]="'mailto:'+customer.email">{{customer.email}}</a></td><td>{{customer.createdAt.replace('T',' ').slice(0,16)}}</td></tr>}
-      </tbody></table></div>}
-    </section>
-  }
+    </div>
+    @if(customerError()){<p class="error" role="alert">{{customerError()}}</p>}
+    @if(customerLoading()){<p class="muted">Loading customers…</p>}
+    @else if(!customers().length){<div class="empty compact">No customers found.</div>}
+    @else{
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Joined (UTC)</th></tr></thead>
+        <tbody>@for(c of customers();track c.id){
+          <tr><td>{{c.id}}</td><td>{{c.name}}</td><td><a [href]="'mailto:'+c.email">{{c.email}}</a></td>
+            <td>{{c.createdAt.replace('T',' ').slice(0,16)}}</td></tr>
+        }</tbody>
+      </table></div>
+    }
+  </section>
+}
 
-  @if(section()==='bookings'){
-    <section class="panel directory-panel">
-      <div class="section-heading directory-heading"><div><h2>Bookings</h2><p class="muted">Read-only reservation overview across all customers.</p></div>
-        <div class="booking-filters">
-          <label>Flight ID<input type="number" min="1" [formControl]="bookingFlightId" (keydown.enter)="filterBookings()" placeholder="All flights"/></label>
-          <label>Status<select [formControl]="bookingStatus" (keydown.enter)="filterBookings()"><option value="ALL">All statuses</option><option value="CONFIRMED">Confirmed</option><option value="CANCELLED">Cancelled</option></select></label>
-          <button type="button" class="secondary" (click)="filterBookings()">Filter</button><button type="button" class="text-button" (click)="clearBookingFilters()">Clear</button>
-        </div>
+@if(section()==='bookings'){
+  <section class="panel directory-panel">
+    <div class="section-heading directory-heading">
+      <div><h2>Reservations</h2><p class="muted">Read-only booking records for all customers.</p></div>
+      <div class="booking-filters">
+        <label>Flight ID <input type="number" min="1" [formControl]="bookingFlightId"
+          (keydown.enter)="filterBookings()" placeholder="All flights" /></label>
+        <label>Status
+          <select [formControl]="bookingStatus" (keydown.enter)="filterBookings()">
+            <option value="ALL">All statuses</option><option value="CONFIRMED">Confirmed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </label>
+        <button type="button" class="secondary" (click)="filterBookings()">Filter</button>
+        <button type="button" class="text-button" (click)="clearBookingFilters()">Clear</button>
       </div>
-      @if(bookingError()){<p class="error" role="alert">{{bookingError()}}</p>}
-      @if(bookingLoading()){<p class="muted">Loading bookings…</p>}
-      @else if(!bookings().length){<div class="empty compact">No bookings match these filters.</div>}
-      @else{<div class="table-wrap"><table><thead><tr><th>Booking</th><th>Customer</th><th>Flight</th><th>Seat</th><th>Fare (INR)</th><th>Status</th><th>Booked (UTC)</th></tr></thead><tbody>
-        @for(booking of bookings();track booking.id){<tr><td>#{{booking.id}}</td><td>#{{booking.userId}}</td><td>#{{booking.flightId}}</td><td>{{booking.seatNumber}}</td><td>₹{{booking.fareAtBooking}}</td><td><span class="pill" [class.success-pill]="booking.status==='CONFIRMED'">{{booking.status}}</span></td><td>{{booking.bookedAt.replace('T',' ').slice(0,16)}}</td></tr>}
-      </tbody></table></div>}
-    </section>
-  }
+    </div>
+    @if(bookingError()){<p class="error" role="alert">{{bookingError()}}</p>}
+    @if(bookingLoading()){<p class="muted">Loading reservations…</p>}
+    @else if(!bookings().length){<div class="empty compact">No reservations match the filters.</div>}
+    @else{
+      <div class="table-wrap"><table>
+        <thead><tr><th>PNR</th><th>Customer ID</th><th>Flight</th><th>Passengers</th>
+          <th>Fare</th><th>Status</th><th>Booked (UTC)</th></tr></thead>
+        <tbody>@for(b of bookings();track b.id){
+          <tr><td><strong>{{b.pnr}}</strong></td><td>{{b.userId}}</td><td>{{b.flightNumber || b.flightId}}</td>
+            <td>{{b.passengerCount}}</td><td>₹{{b.totalFare}}</td><td>{{b.status}}</td>
+            <td>{{b.bookedAt.replace('T',' ').slice(0,16)}}</td></tr>
+        }</tbody>
+      </table></div>
+    }
+  </section>
+}
 
-  @if(pendingFlight(); as flight){
-    <app-confirm-modal
-      [title]="flight.status==='OPEN'?'Close flight sales?':'Reopen flight sales?'"
-      [message]="togglePrompt(flight)"
-      [confirmLabel]="flight.status==='OPEN'?'Close sales':'Open sales'"
-      [destructive]="flight.status==='OPEN'"
-      (confirmed)="toggle(flight)"
-      (dismissed)="pendingFlight.set(null)" />
-  }
+@if(section()==='activity'){
+  <section class="panel directory-panel">
+    <h2>Flight activity history</h2>
+    <p class="muted">The latest 50 flight creation and administration events. Changes are recorded by the Flight service.</p>
+    @if(!activities().length){<div class="empty compact">No flight changes recorded yet.</div>}
+    @else{
+      <div class="table-wrap"><table>
+        <thead><tr><th>When (UTC)</th><th>Flight ID</th><th>Action</th><th>Details</th></tr></thead>
+        <tbody>@for(a of activities();track a.id){
+          <tr><td>{{a.createdAt.replace('T',' ').slice(0,16)}}</td><td>#{{a.flightId}}</td>
+            <td>{{a.action}}</td><td>{{a.description}}</td></tr>
+        }</tbody>
+      </table></div>
+    }
+  </section>
+}
+
+@if(pendingFlight();as f){
+  <app-confirm-modal [title]="f.status==='OPEN'?'Close flight sales?':'Reopen sales?'"
+    [message]="'Update sales availability for '+f.flightNumber+'?'"
+    [confirmLabel]="f.status==='OPEN'?'Close sales':'Reopen sales'"
+    [destructive]="f.status==='OPEN'"
+    (confirmed)="toggle(f)" (dismissed)="pendingFlight.set(null)" />
+}
+@if(pendingCancellation();as f){
+  <app-confirm-modal title="Cancel this flight?"
+    [message]="'Mark '+f.flightNumber+' as cancelled? Existing bookings remain in the database, and customers will see the cancellation notice on their itineraries.'"
+    confirmLabel="Cancel flight" [destructive]="true"
+    (confirmed)="cancelFlight(f)" (dismissed)="pendingCancellation.set(null)" />
+}
+

@@ -1,0 +1,47 @@
+<div class="ticket-shell">
+  <div class="ticket-actions">
+    <a routerLink="/my-bookings" class="back">← My bookings</a>
+    <button type="button" class="secondary" (click)="print()">Print itinerary</button>
+  </div>
+  @if(loading()){<p class="muted">Loading itinerary…</p>}
+  @else if(error()){<p class="error" role="alert">{{error()}}</p>}
+  @else if(booking();as b){
+    <article class="panel itinerary">
+      <div class="ticket-heading">
+        <div><p class="muted">AirlineMS · Reservation itinerary</p><h1>{{b.pnr}}</h1><p class="muted">Booking reference (PNR)</p></div>
+        <span class="pill" [class.success-pill]="b.status==='CONFIRMED'">{{b.status}}</span>
+      </div>
+      @if(operation()==='CANCELLED'){
+        <p class="flight-warning">This flight has been cancelled by the airline. Contact the administrator for assistance.</p>
+      }@else if(operation()==='DELAYED'){
+        <p class="flight-warning">Flight delayed. Please verify the latest departure time before travelling.</p>
+      }
+      <div class="route-overview">
+        <div><strong>{{b.originCode || b.origin || '—'}}</strong><p class="muted">{{b.origin || 'Origin'}}</p></div>
+        <div class="route-arrow">✈ ───────→</div>
+        <div><strong>{{b.destinationCode || b.destination || '—'}}</strong><p class="muted">{{b.destination || 'Destination'}}</p></div>
+      </div>
+      <dl class="ticket-facts">
+        <div><dt>Flight</dt><dd>{{b.flightNumber || ('#'+b.flightId)}}</dd></div>
+        <div><dt>Departure (UTC)</dt><dd>{{b.departureTime?.replace('T',' ').slice(0,16) || 'Not recorded'}}</dd></div>
+        <div><dt>Arrival (UTC)</dt><dd>{{b.arrivalTime?.replace('T',' ').slice(0,16) || 'Not recorded'}}</dd></div>
+        <div><dt>Contact email</dt><dd>{{b.contactEmail || 'Not recorded'}}</dd></div>
+      </dl>
+      <h2>Passengers</h2>
+      <div class="ticket-table-wrap">
+        <table><thead><tr><th>Name</th><th>Age</th><th>Seat</th><th>Fare</th></tr></thead>
+          <tbody>
+            @for(p of b.passengers;track p.id){
+              <tr><td>{{p.fullName}}</td><td>{{p.age}}</td><td>{{p.seatCode}}</td><td>₹{{p.fare}}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="ticket-total"><span>Total fare (INR)</span><strong>₹{{b.totalFare}}</strong></div>
+      <p class="muted footnote">
+        This is a classroom reservation record, not a commercial airline ticket. No payment was collected.
+      </p>
+    </article>
+  }
+</div>
+

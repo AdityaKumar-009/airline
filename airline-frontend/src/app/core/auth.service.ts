@@ -48,6 +48,10 @@ export class AuthService {
     );
   }
 
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.http.patch<void>('/api/auth/me/password', {currentPassword, newPassword});
+  }
+
   logout(): void {
     const keys = ['airline_token', 'airline_role', 'airline_name'];
     keys.forEach(key => sessionStorage.removeItem(key));
@@ -57,3 +61,4 @@ export class AuthService {
     this.name.set(null);
   }
 }
+

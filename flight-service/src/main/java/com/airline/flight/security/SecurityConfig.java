@@ -37,7 +37,7 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-            .requestMatchers(HttpMethod.GET, "/api/flights/manage").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.GET, "/api/flights/manage", "/api/flights/activity").hasRole("ADMIN")
             .requestMatchers(HttpMethod.GET, "/api/flights", "/api/flights/*").permitAll()
             .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
             .requestMatchers("/api/flights", "/api/flights/**").hasRole("ADMIN")
@@ -56,3 +56,4 @@ public class SecurityConfig {
     return converter;
   }
 }
+

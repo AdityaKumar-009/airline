@@ -33,3 +33,17 @@ tbody tr:last-child td { border-bottom: 0; }
   .filter-control button { padding: 9px 11px; }
   .table-wrap { width: calc(100% + 4px); margin-left: -2px; }
 }
+
+.admin-tabs{overflow-x:auto;justify-content:flex-start;white-space:nowrap}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:20px}
+.kpi{display:flex;flex-direction:column;gap:14px;padding:22px}
+.kpi strong{font-size:1.8rem;overflow-wrap:anywhere}
+.quick-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.flight-admin-row{display:flex;gap:16px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.flight-admin-actions{display:flex;gap:8px;flex-wrap:wrap}
+.editor{margin:18px 0;border:1px solid #93c5fd}
+@media(max-width:850px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.admin-tabs{justify-content:flex-start}.admin-tabs button{flex-shrink:0}
+.kpi-grid{grid-template-columns:1fr 1fr;gap:10px}.kpi{padding:14px}.kpi strong{font-size:1.35rem}
+.flight-admin-row{align-items:flex-start}}
+

@@ -91,6 +91,20 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
+  public void changePassword(Long id, com.airline.auth.dto.AuthDtos.ChangePasswordRequest request) {
+    User user = users.findById(id).orElseThrow(
+        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    if (!passwords.matches(request.currentPassword(), user.passwordHash)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+    }
+    if (passwords.matches(request.newPassword(), user.passwordHash)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be different");
+    }
+    user.passwordHash = passwords.encode(request.newPassword());
+    users.save(user);
+  }
+
+  @Override
   public List<AdminCustomerResponse> customers(String search) {
     String term = search == null ? "" : search.trim();
     List<User> results = term.isEmpty()

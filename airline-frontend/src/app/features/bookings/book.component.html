@@ -1,25 +1,89 @@
-  <a routerLink="/flights" class="back">← Back to flights</a>
-  <section class="intro"><h1>Select your seat</h1><p class="muted">Choose an available seat and confirm your booking.</p></section>
-  @if(flight()){
-    <div class="panel booking-panel"><div class="flight-item compact">
-      <div><strong>{{flight()!.flightNumber}}</strong><p class="muted">{{flight()!.origin}} → {{flight()!.destination}}</p></div>
-      <div><strong>₹{{flight()!.price}}</strong><p class="muted">per seat</p></div>
-    </div><hr/>
-    <form [formGroup]="form" (ngSubmit)="requestBooking()">
-      <label>Seat number (1–{{flight()!.capacity}})
-        <input type="number" formControlName="seatNumber" [min]="1" [max]="flight()!.capacity" />
-      </label>
-      <p class="muted">Already occupied seats: {{occupied().length?occupied().join(', '):'None'}}</p>
-      @if(error()){<p class="error">{{error()}}</p>}
-      <button class="primary" [disabled]="busy()">Review booking</button>
-    </form></div>
-  }@else if(error()){<p class="error">{{error()}}</p>}
-  @else{<p class="muted">Loading flight details…</p>}
-  @if(pendingSeat() !== null){
-    <app-confirm-modal
-      title="Confirm booking"
-      [message]="bookingPrompt()"
-      confirmLabel="Book seat"
-      (confirmed)="book()"
-      (dismissed)="pendingSeat.set(null)" />
-  }
+<a routerLink="/flights" class="back">← Back to flights</a>
+<section class="intro">
+  <h1>Select your seats</h1>
+  <p class="muted">Choose up to four available seats. The final availability is verified when you confirm.</p>
+</section>
+
+@if(flight(); as f){
+  <section class="panel">
+    <div class="flight-item compact">
+      <div>
+        <strong>{{f.flightNumber}} · {{f.aircraftType}}</strong>
+        <p class="muted">{{f.originCode || f.origin}} → {{f.destinationCode || f.destination}} · {{f.departureTime.slice(0,16).replace('T',' ')}} UTC</p>
+      </div>
+      <div><strong>₹{{f.price}}</strong><p class="muted">per passenger</p></div>
+    </div>
+  </section>
+  <div class="booking-layout">
+    <section class="panel seat-panel">
+      <div class="section-heading"><h2>Choose seats</h2><span class="muted">{{passengers().length}} / 4 selected</span></div>
+      <div class="seat-legend">
+        <span><i class="seat-mini"></i> Available</span>
+        <span><i class="seat-mini chosen"></i> Selected</span>
+        <span><i class="seat-mini taken"></i> Occupied</span>
+      </div>
+      <div class="seat-aircraft">
+        <div class="aircraft-front">✈ Aircraft front</div>
+        <div class="seat-grid">
+          @for(letter of seatLetters; track $index){
+            <div class="seat-label">{{letter}}</div>
+          }
+          @for(row of rows();track row){
+            @for(letter of seatLetters;track $index){
+              @if(letter===''){
+                <div class="aisle-number">{{row}}</div>
+              }@else{
+                <button type="button" class="seat-button"
+                  [class.chosen]="isSelected(seatNumber(row,letter))"
+                  [class.taken]="isOccupied(seatNumber(row,letter))"
+                  [disabled]="seatNumber(row,letter)>f.capacity || isOccupied(seatNumber(row,letter)) || busy()"
+                  [attr.aria-pressed]="isSelected(seatNumber(row,letter))"
+                  [attr.aria-label]="'Seat '+row+letter+(isOccupied(seatNumber(row,letter))?' occupied':'')"
+                  (click)="toggleSeat(seatNumber(row,letter))">{{letter}}</button>
+              }
+            }
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="panel passenger-panel">
+      <h2>Passenger details</h2>
+      @if(!passengers().length){<p class="muted">Select a seat to add a passenger.</p>}
+      @for(p of passengers();track p.seatNumber){
+        <div class="passenger-item">
+          <div class="section-heading">
+            <strong>Seat {{seatCode(p.seatNumber)}}</strong>
+            <button type="button" class="text-button" (click)="toggleSeat(p.seatNumber)">Remove</button>
+          </div>
+          <label>Full name
+            <input [value]="p.fullName" maxlength="100"
+              (input)="changeName(p.seatNumber,$any($event.target).value)"
+              placeholder="As on identification" />
+          </label>
+          <label>Age
+            <input type="number" min="1" max="120" [value]="p.age"
+              (input)="changeAge(p.seatNumber,$any($event.target).value)" />
+          </label>
+        </div>
+      }
+      <form [formGroup]="form" (ngSubmit)="requestBooking()">
+        <h3>Booking contact</h3>
+        <label>Email address <input type="email" formControlName="contactEmail" placeholder="name@example.com" /></label>
+        <label>Phone (optional) <input type="tel" formControlName="contactPhone" placeholder="+919999999999" /></label>
+        <div class="total-row"><strong>Total fare</strong><strong>₹{{total()}}</strong></div>
+        @if(error()){<p class="error" role="alert">{{error()}}</p>}
+        <button type="submit" class="primary" [disabled]="busy() || !passengers().length">
+          {{busy()?'Processing…':'Review reservation'}}
+        </button>
+      </form>
+    </section>
+  </div>
+}@else if(error()){<p class="error">{{error()}}</p>}
+@else{<p class="muted">Loading flight…</p>}
+
+@if(showConfirmation()){
+  <app-confirm-modal title="Confirm reservation" [message]="bookingPrompt()"
+    confirmLabel="Reserve seats" (confirmed)="book()" (dismissed)="showConfirmation.set(false)" />
+}
+

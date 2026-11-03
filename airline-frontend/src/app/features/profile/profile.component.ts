@@ -10,18 +10,25 @@ import { UserProfile } from '../../core/models';
   templateUrl: './profile.component.html'
 })
 export class ProfileComponent implements OnInit {
-  private auth = inject(AuthService);
-  private fb = inject(FormBuilder);
-  profile = signal<UserProfile | null>(null);
-  loading = signal(true);
-  saving = signal(false);
-  error = signal('');
-  success = signal('');
-  form = this.fb.nonNullable.group({
+  private readonly auth = inject(AuthService);
+  private readonly fb = inject(FormBuilder);
+  readonly profile = signal<UserProfile | null>(null);
+  readonly loading = signal(true);
+  readonly saving = signal(false);
+  readonly passwordSaving = signal(false);
+  readonly error = signal('');
+  readonly success = signal('');
+  readonly passwordError = signal('');
+  readonly passwordSuccess = signal('');
+  readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(/\S/)]]
   });
+  readonly passwordForm = this.fb.nonNullable.group({
+    currentPassword: ['', Validators.required],
+    newPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(72)]]
+  });
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.auth.profile().subscribe({
       next: user => {
         this.profile.set(user);
@@ -35,10 +42,9 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  save() {
-    this.error.set('');
-    this.success.set('');
-    this.form.controls.name.markAsTouched();
+  save(): void {
+    this.error.set('');this.success.set('');
+    this.form.markAllAsTouched();
     if (this.form.invalid) return;
     this.saving.set(true);
     this.auth.updateName(this.form.controls.name.value.trim()).subscribe({
@@ -54,4 +60,24 @@ export class ProfileComponent implements OnInit {
       }
     });
   }
+
+  updatePassword(): void {
+    this.passwordError.set('');this.passwordSuccess.set('');
+    this.passwordForm.markAllAsTouched();
+    if (this.passwordForm.invalid) return;
+    this.passwordSaving.set(true);
+    const v = this.passwordForm.getRawValue();
+    this.auth.changePassword(v.currentPassword, v.newPassword).subscribe({
+      next: () => {
+        this.passwordSaving.set(false);
+        this.passwordForm.reset();
+        this.passwordSuccess.set('Password changed. Use your new password on your next login.');
+      },
+      error: response => {
+        this.passwordSaving.set(false);
+        this.passwordError.set(response.error?.message || 'Could not update password.');
+      }
+    });
+  }
 }
+
