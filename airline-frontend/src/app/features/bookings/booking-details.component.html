@@ -24,8 +24,8 @@
       </div>
       <dl class="ticket-facts">
         <div><dt>Flight</dt><dd>{{b.flightNumber || ('#'+b.flightId)}}</dd></div>
-        <div><dt>Departure (UTC)</dt><dd>{{b.departureTime?.replace('T',' ').slice(0,16) || 'Not recorded'}}</dd></div>
-        <div><dt>Arrival (UTC)</dt><dd>{{b.arrivalTime?.replace('T',' ').slice(0,16) || 'Not recorded'}}</dd></div>
+        <div><dt>Departure (UTC)</dt><dd>{{b.departureTime ? b.departureTime.replace('T',' ').slice(0,16) : 'Not recorded'}}</dd></div>
+        <div><dt>Arrival (UTC)</dt><dd>{{b.arrivalTime ? b.arrivalTime.replace('T',' ').slice(0,16) : 'Not recorded'}}</dd></div>
         <div><dt>Contact email</dt><dd>{{b.contactEmail || 'Not recorded'}}</dd></div>
       </dl>
       <h2>Passengers</h2>
