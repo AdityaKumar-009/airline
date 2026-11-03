@@ -5,7 +5,8 @@
   </div>
   @if(loading()){<p class="muted">Loading itinerary…</p>}
   @else if(error()){<p class="error" role="alert">{{error()}}</p>}
-  @else if(booking();as b){
+  @else{
+    @if(booking(); as b){
     <article class="panel itinerary">
       <div class="ticket-heading">
         <div><p class="muted">AirlineMS · Reservation itinerary</p><h1>{{b.pnr}}</h1><p class="muted">Booking reference (PNR)</p></div>
@@ -42,6 +43,7 @@
         This is a classroom reservation record, not a commercial airline ticket. No payment was collected.
       </p>
     </article>
+    }
   }
 </div>
 
