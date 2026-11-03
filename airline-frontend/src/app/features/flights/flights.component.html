@@ -8,19 +8,31 @@
 
 <form class="panel search-grid" aria-label="Search flights" [formGroup]="form" (ngSubmit)="search()">
   <label>From
-    <input formControlName="origin" list="airports-origin" placeholder="Delhi or DEL" />
+    <input formControlName="origin" list="airports-origin" placeholder="Delhi or DEL" maxlength="80"
+      [attr.aria-invalid]="form.controls.origin.invalid && (form.controls.origin.touched || form.controls.origin.dirty)" />
+    @if(form.controls.origin.invalid && (form.controls.origin.touched || form.controls.origin.dirty)){
+      <small class="field-error">Use at most 80 characters.</small>
+    }
     <datalist id="airports-origin">
       @for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
     </datalist>
   </label>
   <label>To
-    <input formControlName="destination" list="airports-destination" placeholder="Mumbai or BOM" />
+    <input formControlName="destination" list="airports-destination" placeholder="Mumbai or BOM" maxlength="80"
+      [attr.aria-invalid]="form.controls.destination.invalid && (form.controls.destination.touched || form.controls.destination.dirty)" />
+    @if(form.controls.destination.invalid && (form.controls.destination.touched || form.controls.destination.dirty)){
+      <small class="field-error">Use at most 80 characters.</small>
+    }
     <datalist id="airports-destination">
       @for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
     </datalist>
   </label>
   <label>Departure date
-    <input formControlName="date" type="date" />
+    <input formControlName="date" type="date" [min]="todayUtc"
+      [attr.aria-invalid]="isPastDate() && (form.controls.date.touched || form.controls.date.dirty)" />
+    @if(isPastDate() && (form.controls.date.touched || form.controls.date.dirty)){
+      <small class="field-error">Choose today or a future date.</small>
+    }
   </label>
   <button class="primary search-button" [disabled]="loading()">
     {{loading() ? 'Searching…' : 'Search flights'}}

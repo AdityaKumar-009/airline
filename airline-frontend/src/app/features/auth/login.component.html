@@ -16,19 +16,35 @@
     <form [formGroup]="form" (ngSubmit)="submit()">
       @if(registering()) {
         <label>Full name
-          <input formControlName="name" placeholder="Your name" autocomplete="name" />
+          <input formControlName="name" placeholder="Your name" autocomplete="name" maxlength="100"
+            [attr.aria-invalid]="form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty || submitted())" />
         </label>
+        @if(form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty || submitted())){
+          <small class="field-error">Enter a name with at most 100 characters.</small>
+        }
       }
       <label>Email
-        <input formControlName="email" type="email" placeholder="you@example.com" autocomplete="email" />
+        <input formControlName="email" type="email" placeholder="you@example.com" autocomplete="email" maxlength="150"
+          [attr.aria-invalid]="form.controls.email.invalid && (form.controls.email.touched || form.controls.email.dirty || submitted())" />
       </label>
+      @if(form.controls.email.invalid && (form.controls.email.touched || form.controls.email.dirty || submitted())){
+        <small class="field-error">
+          @if(form.controls.email.hasError('required')){Enter your email address.}
+          @else if(form.controls.email.hasError('email')){Enter a valid email address.}
+          @else{Email must be 150 characters or fewer.}
+        </small>
+      }
       <label>Password
         <input formControlName="password" type="password" placeholder="At least 8 characters"
-          [attr.autocomplete]="registering() ? 'new-password' : 'current-password'" />
+          [attr.autocomplete]="registering() ? 'new-password' : 'current-password'" maxlength="72"
+          [attr.aria-invalid]="form.controls.password.invalid && (form.controls.password.touched || form.controls.password.dirty || submitted())" />
       </label>
-
-      @if(form.invalid && submitted()){
-        <p class="error" role="alert">Enter a valid email, name (for registration), and password of at least 8 characters.</p>
+      @if(form.controls.password.invalid && (form.controls.password.touched || form.controls.password.dirty || submitted())){
+        <small class="field-error">
+          @if(form.controls.password.hasError('required')){Enter your password.}
+          @else if(form.controls.password.hasError('minlength')){Password must have at least 8 characters.}
+          @else{Password cannot exceed 72 characters.}
+        </small>
       }
       @if(error()){<p class="error" role="alert">{{error()}}</p>}
       @if(success()){<p class="success" role="status">{{success()}}</p>}

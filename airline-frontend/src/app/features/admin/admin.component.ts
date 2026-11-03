@@ -25,6 +25,7 @@ export class AdminComponent implements OnInit {
   readonly allBookings = signal<AdminBooking[]>([]);
   readonly activities = signal<FlightActivity[]>([]);
   readonly flightLoading = signal(false);
+  readonly savingFlight = signal(false);
   readonly customerLoading = signal(false);
   readonly bookingLoading = signal(false);
   readonly error = signal('');
@@ -47,19 +48,23 @@ export class AdminComponent implements OnInit {
       (f.operationalStatus === 'SCHEDULED' || f.operationalStatus === 'DELAYED') &&
       new Date(f.departureTime + 'Z').getTime() > Date.now()).length);
 
-  readonly customerSearch = new FormControl('', {nonNullable: true});
-  readonly bookingFlightId = new FormControl('', {nonNullable: true});
+  readonly customerSearch = new FormControl('', {
+    nonNullable: true, validators: [Validators.maxLength(150)]
+  });
+  readonly bookingFlightId = new FormControl('', {
+    nonNullable: true, validators: [Validators.pattern(/^[1-9][0-9]{0,17}$/)]
+  });
   readonly bookingStatus = new FormControl('ALL', {nonNullable: true});
 
   readonly form = this.fb.nonNullable.group({
-    flightNumber: ['', Validators.required],
+    flightNumber: ['', [Validators.required, Validators.maxLength(20), Validators.pattern(/\S/)]],
     originCode: ['', Validators.required],
     destinationCode: ['', Validators.required],
     departureTime: ['', Validators.required],
     arrivalTime: ['', Validators.required],
     price: [4500, [Validators.required, Validators.min(0.01)]],
-    capacity: [30, [Validators.required, Validators.min(1), Validators.max(300)]],
-    aircraftType: ['A320', Validators.required]
+    capacity: [30, [Validators.required, Validators.min(1), Validators.max(300), Validators.pattern(/^\d+$/)]],
+    aircraftType: ['A320', [Validators.required, Validators.maxLength(40), Validators.pattern(/\S/)]]
   });
   readonly editForm = this.fb.nonNullable.group({
     price: [4500, [Validators.required, Validators.min(0.01)]],
@@ -67,8 +72,35 @@ export class AdminComponent implements OnInit {
     operationalStatus: ['SCHEDULED', Validators.required],
     departureTime: ['', Validators.required],
     arrivalTime: ['', Validators.required],
-    aircraftType: ['A320', Validators.required]
+    aircraftType: ['A320', [Validators.required, Validators.maxLength(40), Validators.pattern(/\S/)]]
   });
+
+  sameAirports(): boolean {
+    const {originCode, destinationCode} = this.form.getRawValue();
+    return !!originCode && originCode === destinationCode;
+  }
+
+  departureInPast(): boolean {
+    const value = this.form.controls.departureTime.value;
+    return !!value && value <= new Date().toISOString().slice(0, 16);
+  }
+
+  arrivalBeforeDeparture(): boolean {
+    const {departureTime, arrivalTime} = this.form.getRawValue();
+    return !!departureTime && !!arrivalTime && arrivalTime <= departureTime;
+  }
+
+  editDepartureInPast(): boolean {
+    const original = this.editFlight();
+    const value = this.editForm.controls.departureTime.value;
+    return !!original && !!value && value !== original.departureTime.slice(0, 16)
+      && value <= new Date().toISOString().slice(0, 16);
+  }
+
+  editArrivalBeforeDeparture(): boolean {
+    const {departureTime, arrivalTime} = this.editForm.getRawValue();
+    return !!departureTime && !!arrivalTime && arrivalTime <= departureTime;
+  }
 
   ngOnInit(): void {
     this.refresh();
@@ -106,6 +138,8 @@ export class AdminComponent implements OnInit {
 
   searchCustomers(): void {
     this.customerError.set('');
+    this.customerSearch.markAsTouched();
+    if (this.customerSearch.invalid) return;
     this.customerLoading.set(true);
     const params = new HttpParams().set('search', this.customerSearch.value.trim());
     this.http.get<AdminCustomer[]>('/api/auth/admin/customers', {params}).subscribe({
@@ -116,11 +150,9 @@ export class AdminComponent implements OnInit {
 
   filterBookings(): void {
     this.bookingError.set('');
+    this.bookingFlightId.markAsTouched();
     const raw = String(this.bookingFlightId.value).trim();
-    if (raw && !/^[1-9][0-9]*$/.test(raw)) {
-      this.bookingError.set('Enter a positive whole flight ID.');
-      return;
-    }
+    if (this.bookingFlightId.invalid) return;
     let params = new HttpParams();
     if (raw) params = params.set('flightId', raw);
     if (this.bookingStatus.value !== 'ALL') params = params.set('status', this.bookingStatus.value);
@@ -139,20 +171,21 @@ export class AdminComponent implements OnInit {
 
   add(): void {
     this.error.set('');this.success.set('');
-    if (this.form.invalid) {
-      this.error.set('Complete all flight details.');this.form.markAllAsTouched();return;
-    }
+    this.form.markAllAsTouched();
+    if (this.form.invalid || this.sameAirports() || this.departureInPast() || this.arrivalBeforeDeparture()) return;
     const f = this.form.getRawValue();
-    if (f.originCode === f.destinationCode || f.arrivalTime <= f.departureTime) {
-      this.error.set('Choose different airports and check the schedule.');return;
-    }
+    this.savingFlight.set(true);
     this.http.post('/api/flights', f).subscribe({
       next: () => {
+        this.savingFlight.set(false);
         this.success.set('Flight created.');
         this.form.reset();
         this.refresh();this.loadActivity();
       },
-      error: response => this.error.set(response.error?.message || 'Could not create flight.')
+      error: response => {
+        this.savingFlight.set(false);
+        this.error.set(response.error?.message || 'Could not create flight.');
+      }
     });
   }
 
@@ -171,11 +204,9 @@ export class AdminComponent implements OnInit {
 
   saveEdit(): void {
     const original = this.editFlight();
-    if (!original || this.editForm.invalid) {this.error.set('Check all flight details.');return;}
+    this.editForm.markAllAsTouched();
+    if (!original || this.editForm.invalid || this.editDepartureInPast() || this.editArrivalBeforeDeparture()) return;
     const raw = this.editForm.getRawValue();
-    if (raw.arrivalTime <= raw.departureTime) {
-      this.error.set('Arrival must follow departure.');return;
-    }
     const changes: Record<string, string | number> = {};
     if (raw.price !== original.price) changes['price'] = raw.price;
     if (raw.status !== original.status) changes['status'] = raw.status as FlightStatus;
@@ -188,13 +219,18 @@ export class AdminComponent implements OnInit {
     if (raw.aircraftType !== original.aircraftType) changes['aircraftType'] = raw.aircraftType;
     if (!Object.keys(changes).length) {this.editFlight.set(null);return;}
     this.error.set('');this.success.set('');
+    this.savingFlight.set(true);
     this.http.patch('/api/flights/' + original.id, changes).subscribe({
       next: () => {
+        this.savingFlight.set(false);
         this.editFlight.set(null);
         this.success.set('Flight updated.');
         this.refresh();this.loadActivity();
       },
-      error: response => this.error.set(response.error?.message || 'Could not update flight.')
+      error: response => {
+        this.savingFlight.set(false);
+        this.error.set(response.error?.message || 'Could not update flight.');
+      }
     });
   }
 

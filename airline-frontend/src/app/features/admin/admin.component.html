@@ -34,25 +34,78 @@
   <section class="panel admin-form">
     <h2>Add a flight</h2>
     <form [formGroup]="form" (ngSubmit)="add()" class="admin-grid">
-      <label>Flight number<input formControlName="flightNumber" placeholder="AI109" maxlength="20" /></label>
+      <label>Flight number
+        <input formControlName="flightNumber" placeholder="AI109" maxlength="20"
+          [attr.aria-invalid]="form.controls.flightNumber.invalid && (form.controls.flightNumber.touched || form.controls.flightNumber.dirty)" />
+        @if((form.controls.flightNumber.touched || form.controls.flightNumber.dirty) && form.controls.flightNumber.invalid){
+          <small class="field-error">
+            @if(form.controls.flightNumber.hasError('required') || form.controls.flightNumber.hasError('pattern')){Enter a flight number.}
+            @else{Use no more than 20 characters.}
+          </small>
+        }
+      </label>
       <label>From airport
-        <select formControlName="originCode">
+        <select formControlName="originCode"
+          [attr.aria-invalid]="form.controls.originCode.invalid && (form.controls.originCode.touched || form.controls.originCode.dirty)">
           <option value="">Select airport</option>
           @for(a of airports();track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
         </select>
+        @if((form.controls.originCode.touched || form.controls.originCode.dirty) && form.controls.originCode.invalid){
+          <small class="field-error">Choose a departure airport.</small>
+        }
       </label>
       <label>To airport
-        <select formControlName="destinationCode">
+        <select formControlName="destinationCode"
+          [attr.aria-invalid]="(form.controls.destinationCode.invalid || sameAirports()) && (form.controls.destinationCode.touched || form.controls.destinationCode.dirty)">
           <option value="">Select airport</option>
           @for(a of airports();track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
         </select>
+        @if((form.controls.destinationCode.touched || form.controls.destinationCode.dirty) && form.controls.destinationCode.invalid){
+          <small class="field-error">Choose an arrival airport.</small>
+        }@else if((form.controls.destinationCode.touched || form.controls.destinationCode.dirty) && sameAirports()){
+          <small class="field-error">Choose a different arrival airport.</small>
+        }
       </label>
-      <label>Departure (UTC)<input type="datetime-local" formControlName="departureTime" /></label>
-      <label>Arrival (UTC)<input type="datetime-local" formControlName="arrivalTime" /></label>
-      <label>Fare (INR)<input type="number" formControlName="price" min="0.01" /></label>
-      <label>Seats<input type="number" formControlName="capacity" min="1" max="300" /></label>
-      <label>Aircraft type<input formControlName="aircraftType" placeholder="A320" maxlength="40" /></label>
-      <button class="primary" [disabled]="form.invalid">Add flight</button>
+      <label>Departure (UTC)
+        <input type="datetime-local" formControlName="departureTime"
+          [attr.aria-invalid]="(form.controls.departureTime.invalid || departureInPast()) && (form.controls.departureTime.touched || form.controls.departureTime.dirty)" />
+        @if((form.controls.departureTime.touched || form.controls.departureTime.dirty) && form.controls.departureTime.invalid){
+          <small class="field-error">Choose a departure date and time.</small>
+        }@else if((form.controls.departureTime.touched || form.controls.departureTime.dirty) && departureInPast()){
+          <small class="field-error">Departure must be in the future (UTC).</small>
+        }
+      </label>
+      <label>Arrival (UTC)
+        <input type="datetime-local" formControlName="arrivalTime"
+          [attr.aria-invalid]="(form.controls.arrivalTime.invalid || arrivalBeforeDeparture()) && (form.controls.arrivalTime.touched || form.controls.arrivalTime.dirty)" />
+        @if((form.controls.arrivalTime.touched || form.controls.arrivalTime.dirty) && form.controls.arrivalTime.invalid){
+          <small class="field-error">Choose an arrival date and time.</small>
+        }@else if((form.controls.arrivalTime.touched || form.controls.arrivalTime.dirty) && arrivalBeforeDeparture()){
+          <small class="field-error">Arrival must be after departure.</small>
+        }
+      </label>
+      <label>Fare (INR)
+        <input type="number" formControlName="price" min="0.01" step="0.01"
+          [attr.aria-invalid]="form.controls.price.invalid && (form.controls.price.touched || form.controls.price.dirty)" />
+        @if((form.controls.price.touched || form.controls.price.dirty) && form.controls.price.invalid){
+          <small class="field-error">Enter a fare greater than ₹0.</small>
+        }
+      </label>
+      <label>Seats
+        <input type="number" formControlName="capacity" min="1" max="300" step="1"
+          [attr.aria-invalid]="form.controls.capacity.invalid && (form.controls.capacity.touched || form.controls.capacity.dirty)" />
+        @if((form.controls.capacity.touched || form.controls.capacity.dirty) && form.controls.capacity.invalid){
+          <small class="field-error">Enter a whole number of seats from 1 to 300.</small>
+        }
+      </label>
+      <label>Aircraft type
+        <input formControlName="aircraftType" placeholder="A320" maxlength="40"
+          [attr.aria-invalid]="form.controls.aircraftType.invalid && (form.controls.aircraftType.touched || form.controls.aircraftType.dirty)" />
+        @if((form.controls.aircraftType.touched || form.controls.aircraftType.dirty) && form.controls.aircraftType.invalid){
+          <small class="field-error">Enter an aircraft type up to 40 characters.</small>
+        }
+      </label>
+      <button class="primary" [disabled]="savingFlight()">{{savingFlight()?'Adding…':'Add flight'}}</button>
     </form>
     @if(error()){<p class="error" role="alert">{{error()}}</p>}
     @if(success()){<p class="success" role="status">{{success()}}</p>}
@@ -64,7 +117,13 @@
         <button type="button" class="text-button" (click)="editFlight.set(null)">Close</button></div>
       <p class="muted">Schedule changes are blocked while this flight has active seat reservations.</p>
       <form class="admin-grid" [formGroup]="editForm" (ngSubmit)="saveEdit()">
-        <label>Fare (INR)<input type="number" min="0.01" formControlName="price" /></label>
+        <label>Fare (INR)
+          <input type="number" min="0.01" step="0.01" formControlName="price"
+            [attr.aria-invalid]="editForm.controls.price.invalid && (editForm.controls.price.touched || editForm.controls.price.dirty)" />
+          @if((editForm.controls.price.touched || editForm.controls.price.dirty) && editForm.controls.price.invalid){
+            <small class="field-error">Enter a fare greater than ₹0.</small>
+          }
+        </label>
         <label>Sales status
           <select formControlName="status"><option value="OPEN">Open</option><option value="CLOSED">Closed</option></select>
         </label>
@@ -77,10 +136,32 @@
             <option value="COMPLETED">Completed</option>
           </select>
         </label>
-        <label>Departure (UTC)<input type="datetime-local" formControlName="departureTime" /></label>
-        <label>Arrival (UTC)<input type="datetime-local" formControlName="arrivalTime" /></label>
-        <label>Aircraft type<input formControlName="aircraftType" maxlength="40" /></label>
-        <button class="primary" type="submit" [disabled]="editForm.invalid">Save changes</button>
+        <label>Departure (UTC)
+          <input type="datetime-local" formControlName="departureTime"
+            [attr.aria-invalid]="(editForm.controls.departureTime.invalid || editDepartureInPast()) && (editForm.controls.departureTime.touched || editForm.controls.departureTime.dirty)" />
+          @if((editForm.controls.departureTime.touched || editForm.controls.departureTime.dirty) && editForm.controls.departureTime.invalid){
+            <small class="field-error">Choose a departure date and time.</small>
+          }@else if((editForm.controls.departureTime.touched || editForm.controls.departureTime.dirty) && editDepartureInPast()){
+            <small class="field-error">A changed departure must be in the future (UTC).</small>
+          }
+        </label>
+        <label>Arrival (UTC)
+          <input type="datetime-local" formControlName="arrivalTime"
+            [attr.aria-invalid]="(editForm.controls.arrivalTime.invalid || editArrivalBeforeDeparture()) && (editForm.controls.arrivalTime.touched || editForm.controls.arrivalTime.dirty)" />
+          @if((editForm.controls.arrivalTime.touched || editForm.controls.arrivalTime.dirty) && editForm.controls.arrivalTime.invalid){
+            <small class="field-error">Choose an arrival date and time.</small>
+          }@else if((editForm.controls.arrivalTime.touched || editForm.controls.arrivalTime.dirty) && editArrivalBeforeDeparture()){
+            <small class="field-error">Arrival must be after departure.</small>
+          }
+        </label>
+        <label>Aircraft type
+          <input formControlName="aircraftType" maxlength="40"
+            [attr.aria-invalid]="editForm.controls.aircraftType.invalid && (editForm.controls.aircraftType.touched || editForm.controls.aircraftType.dirty)" />
+          @if((editForm.controls.aircraftType.touched || editForm.controls.aircraftType.dirty) && editForm.controls.aircraftType.invalid){
+            <small class="field-error">Enter an aircraft type up to 40 characters.</small>
+          }
+        </label>
+        <button class="primary" type="submit" [disabled]="savingFlight()">{{savingFlight()?'Saving…':'Save changes'}}</button>
       </form>
       @if(error()){<p class="error" role="alert">{{error()}}</p>}
     </section>
@@ -121,9 +202,15 @@
       <div class="directory-search">
         <label for="customer-search">Search name or email</label>
         <div class="filter-control">
-          <input id="customer-search" [formControl]="customerSearch" (keydown.enter)="searchCustomers()" placeholder="Name or email" />
-          <button type="button" class="secondary" (click)="searchCustomers()">Search</button>
+          <input id="customer-search" [formControl]="customerSearch" (keydown.enter)="searchCustomers()"
+            placeholder="Name or email" maxlength="150"
+            [attr.aria-invalid]="customerSearch.invalid && (customerSearch.touched || customerSearch.dirty)" />
+          <button type="button" class="secondary" (click)="searchCustomers()"
+            [disabled]="customerSearch.invalid || customerLoading()">Search</button>
         </div>
+        @if((customerSearch.touched || customerSearch.dirty) && customerSearch.invalid){
+          <small class="field-error">Search text must be 150 characters or fewer.</small>
+        }
       </div>
     </div>
     @if(customerError()){<p class="error" role="alert">{{customerError()}}</p>}
@@ -146,8 +233,14 @@
     <div class="section-heading directory-heading">
       <div><h2>Reservations</h2><p class="muted">Read-only booking records for all customers.</p></div>
       <div class="booking-filters">
-        <label>Flight ID <input type="number" min="1" [formControl]="bookingFlightId"
-          (keydown.enter)="filterBookings()" placeholder="All flights" /></label>
+        <label>Flight ID
+          <input type="number" min="1" step="1" [formControl]="bookingFlightId"
+            (keydown.enter)="filterBookings()" placeholder="All flights"
+            [attr.aria-invalid]="bookingFlightId.invalid && (bookingFlightId.touched || bookingFlightId.dirty)" />
+          @if(bookingFlightId.invalid && (bookingFlightId.touched || bookingFlightId.dirty)){
+            <small class="field-error">Enter a positive whole ID (up to 18 digits), or leave blank.</small>
+          }
+        </label>
         <label>Status
           <select [formControl]="bookingStatus" (keydown.enter)="filterBookings()">
             <option value="ALL">All statuses</option><option value="CONFIRMED">Confirmed</option>

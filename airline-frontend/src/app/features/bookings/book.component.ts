@@ -34,7 +34,7 @@ export class BookComponent implements OnInit {
     {length: Math.ceil((this.flight()?.capacity ?? 0) / 6)}, (_, i) => i + 1));
   readonly total = computed(() => (this.flight()?.price ?? 0) * this.passengers().length);
   readonly form = this.fb.nonNullable.group({
-    contactEmail: ['', [Validators.required, Validators.email]],
+    contactEmail: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
     contactPhone: ['', [Validators.pattern(/^\+?[0-9]{10,15}$/)]]
   });
 
@@ -90,19 +90,25 @@ export class BookComponent implements OnInit {
       p.seatNumber === seat ? {...p, age: Number(value)} : p));
   }
 
+  passengerNameError(passenger: DraftPassenger): string {
+    if (!passenger.fullName.trim()) return 'Enter the passenger’s full name.';
+    return passenger.fullName.length > 100 ? 'Use no more than 100 characters.' : '';
+  }
+
+  passengerAgeError(passenger: DraftPassenger): string {
+    return !Number.isInteger(passenger.age) || passenger.age < 1 || passenger.age > 120
+      ? 'Enter a whole age from 1 to 120.' : '';
+  }
+
   requestBooking(): void {
+    this.error.set('');
     if (!this.passengers().length) {
       this.error.set('Select at least one available seat.');
       return;
     }
+    this.form.markAllAsTouched();
     if (this.form.invalid || this.passengers().some(p =>
-      !p.fullName.trim() || p.fullName.trim().length > 100 ||
-      !Number.isInteger(p.age) || p.age < 1 || p.age > 120)) {
-      this.error.set('Enter a contact email, each passenger name and a valid age (1–120).');
-      this.form.markAllAsTouched();
-      return;
-    }
-    this.error.set('');
+      this.passengerNameError(p) || this.passengerAgeError(p))) return;
     this.showConfirmation.set(true);
   }
 

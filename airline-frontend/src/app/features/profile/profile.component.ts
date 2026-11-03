@@ -19,6 +19,7 @@ export class ProfileComponent implements OnInit {
   readonly error = signal('');
   readonly success = signal('');
   readonly passwordError = signal('');
+  readonly currentPasswordError = signal('');
   readonly passwordSuccess = signal('');
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(/\S/)]]
@@ -63,8 +64,9 @@ export class ProfileComponent implements OnInit {
 
   updatePassword(): void {
     this.passwordError.set('');this.passwordSuccess.set('');
+    this.currentPasswordError.set('');
     this.passwordForm.markAllAsTouched();
-    if (this.passwordForm.invalid) return;
+    if (this.passwordForm.invalid || this.passwordsSame()) return;
     this.passwordSaving.set(true);
     const v = this.passwordForm.getRawValue();
     this.auth.changePassword(v.currentPassword, v.newPassword).subscribe({
@@ -75,9 +77,16 @@ export class ProfileComponent implements OnInit {
       },
       error: response => {
         this.passwordSaving.set(false);
-        this.passwordError.set(response.error?.message || 'Could not update password.');
+        const message = response.error?.message || 'Could not update password.';
+        if (message.includes('Current password')) this.currentPasswordError.set(message);
+        else this.passwordError.set(message);
       }
     });
+  }
+
+  passwordsSame(): boolean {
+    const {currentPassword, newPassword} = this.passwordForm.getRawValue();
+    return !!newPassword && currentPassword === newPassword;
   }
 }
 

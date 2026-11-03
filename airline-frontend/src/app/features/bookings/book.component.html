@@ -57,20 +57,40 @@
             <button type="button" class="text-button" (click)="toggleSeat(p.seatNumber)">Remove</button>
           </div>
           <label>Full name
-            <input [value]="p.fullName" maxlength="100"
+            <input [value]="p.fullName" maxlength="100" autocomplete="name" required
+              [attr.aria-invalid]="!!passengerNameError(p)"
               (input)="changeName(p.seatNumber,$any($event.target).value)"
               placeholder="As on identification" />
+            @if(passengerNameError(p)){<small class="field-error">{{passengerNameError(p)}}</small>}
           </label>
           <label>Age
-            <input type="number" min="1" max="120" [value]="p.age"
+            <input type="number" min="1" max="120" step="1" required [value]="p.age"
+              [attr.aria-invalid]="!!passengerAgeError(p)"
               (input)="changeAge(p.seatNumber,$any($event.target).value)" />
+            @if(passengerAgeError(p)){<small class="field-error">{{passengerAgeError(p)}}</small>}
           </label>
         </div>
       }
       <form [formGroup]="form" (ngSubmit)="requestBooking()">
         <h3>Booking contact</h3>
-        <label>Email address <input type="email" formControlName="contactEmail" placeholder="name@example.com" /></label>
-        <label>Phone (optional) <input type="tel" formControlName="contactPhone" placeholder="+919999999999" /></label>
+        <label>Email address
+          <input type="email" formControlName="contactEmail" placeholder="name@example.com" maxlength="150"
+            [attr.aria-invalid]="form.controls.contactEmail.invalid && (form.controls.contactEmail.touched || form.controls.contactEmail.dirty)" />
+          @if(form.controls.contactEmail.invalid && (form.controls.contactEmail.touched || form.controls.contactEmail.dirty)){
+            <small class="field-error">
+              @if(form.controls.contactEmail.hasError('required')){Enter a contact email.}
+              @else if(form.controls.contactEmail.hasError('email')){Enter a valid email address.}
+              @else{Email must be 150 characters or fewer.}
+            </small>
+          }
+        </label>
+        <label>Phone (optional)
+          <input type="tel" formControlName="contactPhone" placeholder="+919999999999" maxlength="16"
+            [attr.aria-invalid]="form.controls.contactPhone.invalid && (form.controls.contactPhone.touched || form.controls.contactPhone.dirty)" />
+          @if(form.controls.contactPhone.invalid && (form.controls.contactPhone.touched || form.controls.contactPhone.dirty)){
+            <small class="field-error">Use 10–15 digits, with an optional leading +.</small>
+          }
+        </label>
         <div class="total-row"><strong>Total fare</strong><strong>₹{{total()}}</strong></div>
         @if(error()){<p class="error" role="alert">{{error()}}</p>}
         <button type="submit" class="primary" [disabled]="busy() || !passengers().length">

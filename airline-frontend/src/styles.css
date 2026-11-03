@@ -210,6 +210,10 @@ input:focus, select:focus {
 
 .success { border: 1px solid #bee3ca; background: #f1fbf4; color: var(--success); }
 
+.field-error { display: block; margin-top: -3px; color: var(--danger); font-size: .8rem; font-weight: 500; line-height: 1.4; }
+
+input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--danger); }
+
 .pill {
   display: inline-flex;
   align-items: center;

@@ -22,12 +22,15 @@ export class LoginComponent {
 
   readonly form = this.fb.nonNullable.group({
     name: [''],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]]
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
+    password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(72)]]
   });
 
   toggle(): void {
     this.registering.update(isRegistering => !isRegistering);
+    this.form.controls.name.setValidators(this.registering()
+      ? [Validators.required, Validators.maxLength(100), Validators.pattern(/\S/)] : []);
+    this.form.controls.name.updateValueAndValidity();
     this.submitted.set(false);
     this.error.set('');
     this.success.set('');
@@ -37,8 +40,9 @@ export class LoginComponent {
     this.submitted.set(true);
     this.error.set('');
     this.success.set('');
+    this.form.markAllAsTouched();
 
-    if (this.form.invalid || (this.registering() && !this.form.value.name?.trim())) return;
+    if (this.form.invalid) return;
 
     const { name, email, password } = this.form.getRawValue();
     this.busy.set(true);

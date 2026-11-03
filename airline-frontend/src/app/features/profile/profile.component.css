@@ -14,8 +14,6 @@
 
 .profile-panel button { justify-self: start; }
 
-.field-error { margin-top: -7px; color: var(--danger); font-size: .82rem; }
-
 @media (max-width: 760px) { .profile-sections { grid-template-columns: 1fr; } }
 
 @media (max-width: 520px) { .profile-panel button { width: 100%; } }
