@@ -13,7 +13,19 @@ permissions:
 jobs:
   validation:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root --password=password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -22,7 +34,7 @@ jobs:
           java-version: '17.0.12+7'
           cache: maven
       - name: Test booking requests with javac
-        run: mvn -B -ntp -pl booking-service -am clean test
+        run: mvn -B -ntp clean package
       - name: Compile booking DTOs with the older Eclipse compiler
         run: |
           mvn -B -ntp -pl booking-service dependency:build-classpath -Dmdep.outputFile=target/validation-classpath.txt
@@ -37,3 +49,107 @@ jobs:
       - name: Test HTTP validation using Eclipse-compiled DTOs
         # Skip the compile lifecycle so javac cannot overwrite the Eclipse class files.
         run: mvn -B -ntp -pl booking-service surefire:test
+      - name: Package the Eclipse-compiled booking DTO
+        run: |
+          sha256sum 'booking-service/target/classes/com/airline/booking/dto/BookingDtos$BookingRequest.class' > /tmp/ecj-dto.sha256
+          mvn -B -ntp -pl booking-service package -DskipTests
+          sha256sum --check /tmp/ecj-dto.sha256
+      - name: Start the real services with MySQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          java tools/GenerateKeys.java
+          wait_http() {
+            for i in {1..90}; do
+              if curl -fsS --max-time 2 "$2" >/dev/null 2>&1; then
+                echo "$1 ready"
+                return 0
+              fi
+              sleep 2
+            done
+            tail -100 "/tmp/$1.log"
+            return 1
+          }
+          java -Xmx384m -jar discovery-server/target/discovery-server-1.0.0.jar > /tmp/discovery.log 2>&1 &
+          wait_http discovery http://localhost:8761/
+          java -Xmx384m -jar auth-service/target/auth-service-1.0.0.jar --eureka.instance.hostname=localhost > /tmp/auth.log 2>&1 &
+          wait_http auth http://localhost:8081/v3/api-docs
+          java -Xmx384m -jar flight-service/target/flight-service-1.0.0.jar --eureka.instance.hostname=localhost > /tmp/flight.log 2>&1 &
+          wait_http flight http://localhost:8082/api/flights/airports
+          java -Xmx384m -jar booking-service/target/booking-service-1.0.0.jar --eureka.instance.hostname=localhost > /tmp/booking.log 2>&1 &
+          wait_http booking 'http://localhost:8083/api/bookings/seats?flightId=1'
+          java -Xmx384m -jar api-gateway/target/api-gateway-1.0.0.jar --eureka.instance.hostname=localhost > /tmp/gateway.log 2>&1 &
+          wait_http gateway http://localhost:8080/api/flights/airports
+      - name: Verify real reservations and validation through the gateway
+        run: |
+          python3 - <<'PY'
+          import copy
+          import json
+          import time
+          import urllib.error
+          import urllib.request
+          from datetime import datetime, timedelta, timezone
+
+          base = 'http://localhost:8080'
+          def call(method, path, body=None, token=None, expected=200):
+              headers = {'Content-Type': 'application/json'}
+              if token:
+                  headers['Authorization'] = 'Bearer ' + token
+              request = urllib.request.Request(base + path, method=method, headers=headers,
+                  data=json.dumps(body).encode() if body is not None else None)
+              try:
+                  response = urllib.request.urlopen(request, timeout=30)
+              except urllib.error.HTTPError as error:
+                  response = error
+              data = json.loads(response.read())
+              assert response.status == expected, (method, path, response.status, data)
+              return data
+
+          # Allow each service's discovery cache to receive the other registrations.
+          time.sleep(10)
+          admin = call('POST', '/api/auth/login', {'email':'admin@airline.test', 'password':'Admin@12345'})['token']
+          customer = call('POST', '/api/auth/login', {'email':'customer@airline.test', 'password':'Customer@12345'})['token']
+          departure = datetime.now(timezone.utc).replace(tzinfo=None, microsecond=0) + timedelta(days=7)
+          flight = call('POST', '/api/flights', {
+              'flightNumber':'VALIDATION17', 'originCode':'DEL', 'destinationCode':'BOM',
+              'departureTime':departure.isoformat(), 'arrivalTime':(departure+timedelta(hours=2)).isoformat(),
+              'price':4500, 'capacity':30, 'aircraftType':'A320'
+          }, admin, 201)
+          booking = {'flightId':flight['id'], 'contactEmail':'customer@airline.test', 'contactPhone':'',
+              'passengers':[{'fullName':'Booking Regression', 'age':25, 'seatNumber':16}]}
+          for field, invalid in [('fullName', ' '), ('age', 0), ('seatNumber', 0)]:
+              bad = copy.deepcopy(booking)
+              bad['passengers'][0][field] = invalid
+              error = call('POST', '/api/bookings', bad, customer, 400)
+              assert 'passengers[0].' + field in str(error['message']), error
+              print('PASS: invalid ' + field + ' returns HTTP 400')
+
+          saved = call('POST', '/api/bookings', booking, customer, 201)
+          assert saved['pnr'] and saved['status'] == 'CONFIRMED', saved
+          assert saved['totalFare'] == 4500 and saved['passengers'][0]['seatCode'] == '3D', saved
+          print('PASS: seat 3D reserved, HTTP 201, PNR generated, fare 4500')
+          seats = call('GET', '/api/bookings/seats?flightId=' + str(flight['id']))
+          assert 16 in seats, seats
+          call('POST', '/api/bookings', booking, customer, 409)
+          print('PASS: duplicate seat rejected with HTTP 409')
+
+          group = copy.deepcopy(booking)
+          group['passengers'] = [{'fullName':'Passenger '+str(seat), 'age':25, 'seatNumber':seat} for seat in [1,2,3,4]]
+          saved_group = call('POST', '/api/bookings', group, customer, 201)
+          assert len(saved_group['passengers']) == 4 and saved_group['totalFare'] == 18000, saved_group
+          mine = call('GET', '/api/bookings/me', token=customer)
+          assert {saved['id'], saved_group['id']}.issubset({item['id'] for item in mine}), mine
+          print('PASS: four-passenger reservation persisted and visible in My Bookings')
+
+          cancelled = call('PATCH', '/api/bookings/' + str(saved['id']) + '/cancel', token=customer)
+          assert cancelled['status'] == 'CANCELLED', cancelled
+          seats = call('GET', '/api/bookings/seats?flightId=' + str(flight['id']))
+          assert 16 not in seats and {1,2,3,4}.issubset(seats), seats
+          print('PASS: cancelling the reservation releases seat 3D')
+          PY
+      - name: Print service diagnostics on failure
+        if: failure()
+        run: |
+          for service in discovery auth flight booking gateway; do
+            if [ -f "/tmp/$service.log" ]; then tail -80 "/tmp/$service.log"; fi
+          done
