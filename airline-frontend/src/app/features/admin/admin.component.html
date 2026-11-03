@@ -4,11 +4,11 @@
 </section>
 
 <nav class="admin-tabs" aria-label="Administration sections">
-  <button type="button" [class.active]="section()==='overview'" (click)="section.set('overview')">Overview</button>
-  <button type="button" [class.active]="section()==='flights'" (click)="section.set('flights')">Flights</button>
-  <button type="button" [class.active]="section()==='customers'" (click)="section.set('customers')">Customers</button>
-  <button type="button" [class.active]="section()==='bookings'" (click)="section.set('bookings')">Reservations</button>
-  <button type="button" [class.active]="section()==='activity'" (click)="section.set('activity')">Activity</button>
+  <button type="button" [class.active]="section()==='overview'" [attr.aria-pressed]="section()==='overview'" (click)="section.set('overview')">Overview</button>
+  <button type="button" [class.active]="section()==='flights'" [attr.aria-pressed]="section()==='flights'" (click)="section.set('flights')">Flights</button>
+  <button type="button" [class.active]="section()==='customers'" [attr.aria-pressed]="section()==='customers'" (click)="section.set('customers')">Customers</button>
+  <button type="button" [class.active]="section()==='bookings'" [attr.aria-pressed]="section()==='bookings'" (click)="section.set('bookings')">Reservations</button>
+  <button type="button" [class.active]="section()==='activity'" [attr.aria-pressed]="section()==='activity'" (click)="section.set('activity')">Activity</button>
 </nav>
 
 @if(section()==='overview'){
@@ -217,7 +217,7 @@
     @if(customerLoading()){<p class="muted">Loading customers…</p>}
     @else if(!customers().length){<div class="empty compact">No customers found.</div>}
     @else{
-      <div class="table-wrap"><table>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Customer records"><table>
         <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Joined (UTC)</th></tr></thead>
         <tbody>@for(c of customers();track c.id){
           <tr><td>{{c.id}}</td><td>{{c.name}}</td><td><a [href]="'mailto:'+c.email">{{c.email}}</a></td>
@@ -255,7 +255,7 @@
     @if(bookingLoading()){<p class="muted">Loading reservations…</p>}
     @else if(!bookings().length){<div class="empty compact">No reservations match the filters.</div>}
     @else{
-      <div class="table-wrap"><table>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Reservation records"><table>
         <thead><tr><th>PNR</th><th>Customer ID</th><th>Flight</th><th>Passengers</th>
           <th>Fare</th><th>Status</th><th>Booked (UTC)</th></tr></thead>
         <tbody>@for(b of bookings();track b.id){
@@ -274,7 +274,7 @@
     <p class="muted">The latest 50 flight creation and administration events. Changes are recorded by the Flight service.</p>
     @if(!activities().length){<div class="empty compact">No flight changes recorded yet.</div>}
     @else{
-      <div class="table-wrap"><table>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Flight activity records"><table>
         <thead><tr><th>When (UTC)</th><th>Flight ID</th><th>Action</th><th>Details</th></tr></thead>
         <tbody>@for(a of activities();track a.id){
           <tr><td>{{a.createdAt.replace('T',' ').slice(0,16)}}</td><td>#{{a.flightId}}</td>

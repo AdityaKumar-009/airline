@@ -1,6 +1,6 @@
 <section class="flight-hero">
   <div class="hero-copy">
-    <span class="eyebrow">A smoother way to travel</span>
+    <span class="eyebrow">Flights & reservations</span>
     <h1>Find your next flight</h1>
     <p>Search by city or airport code, choose a flight, and reserve up to four seats.</p>
   </div>
@@ -13,9 +13,6 @@
     @if(form.controls.origin.invalid && (form.controls.origin.touched || form.controls.origin.dirty)){
       <small class="field-error">Use at most 80 characters.</small>
     }
-    <datalist id="airports-origin">
-      @for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
-    </datalist>
   </label>
   <label>To
     <input formControlName="destination" list="airports-destination" placeholder="Mumbai or BOM" maxlength="80"
@@ -23,9 +20,6 @@
     @if(form.controls.destination.invalid && (form.controls.destination.touched || form.controls.destination.dirty)){
       <small class="field-error">Use at most 80 characters.</small>
     }
-    <datalist id="airports-destination">
-      @for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
-    </datalist>
   </label>
   <label>Departure date
     <input formControlName="date" type="date" [min]="todayUtc"
@@ -38,14 +32,19 @@
     {{loading() ? 'Searching…' : 'Search flights'}}
   </button>
 </form>
+<datalist id="airports-origin">
+  @for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
+</datalist>
+<datalist id="airports-destination">
+  @for(a of airports(); track a.code){<option [value]="a.code">{{a.city}} ({{a.code}})</option>}
+</datalist>
 
 <section class="results-section">
   <div class="section-heading">
     <div>
-      <span class="eyebrow">Choose your journey</span>
       <h2>Available flights</h2>
     </div>
-    <span class="result-count">{{flights().length}} flights</span>
+    <span class="result-count">{{flights().length}} {{flights().length === 1 ? 'flight' : 'flights'}}</span>
   </div>
 
   @if(error()){<p class="error" role="alert">{{error()}}</p>}
@@ -56,7 +55,6 @@
       @for(f of flights();track f.id){
         <article class="panel flight-item">
           <div class="flight-airline">
-            <span class="flight-mark" aria-hidden="true">✈</span>
             <div>
               <strong>{{f.flightNumber}}</strong>
               <p class="muted">{{f.aircraftType}}</p>
@@ -68,7 +66,7 @@
               <strong>{{f.originCode || f.origin}}</strong>
               <span>{{f.origin}}</span>
             </div>
-            <div class="route-line" aria-hidden="true"><span></span>✈<span></span></div>
+            <div class="route-line" aria-hidden="true">→</div>
             <div class="airport destination">
               <strong>{{f.destinationCode || f.destination}}</strong>
               <span>{{f.destination}}</span>
@@ -77,7 +75,7 @@
 
           <div class="flight-schedule">
             <strong>{{formatTime(f.departureTime)}} – {{formatTime(f.arrivalTime)}}</strong>
-            <span>{{formatDate(f.departureTime)}} · {{duration(f)}}</span>
+            <span>{{formatDate(f.departureTime)}} · {{duration(f)}} · UTC</span>
             @if(f.operationalStatus==='DELAYED'){<span class="pill">Delayed</span>}
           </div>
 

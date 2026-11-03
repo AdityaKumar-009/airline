@@ -5,7 +5,7 @@
 </section>
 
 @if(flight(); as f){
-  <section class="panel">
+  <section class="panel flight-summary">
     <div class="flight-item compact">
       <div>
         <strong>{{f.flightNumber}} · {{f.aircraftType}}</strong>
@@ -34,6 +34,7 @@
                 <div class="aisle-number">{{row}}</div>
               }@else{
                 <button type="button" class="seat-button"
+                  [class.outside-cabin]="seatNumber(row,letter)>f.capacity"
                   [class.chosen]="isSelected(seatNumber(row,letter))"
                   [class.taken]="isOccupied(seatNumber(row,letter))"
                   [disabled]="seatNumber(row,letter)>f.capacity || isOccupied(seatNumber(row,letter)) || busy()"

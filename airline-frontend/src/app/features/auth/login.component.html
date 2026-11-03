@@ -1,54 +1,50 @@
-<section class="auth-layout" [class.registering]="registering()">
-  <div class="auth-visual" aria-hidden="true">
-    <div class="visual-copy">
-      <span class="visual-tag">AIRLINE TRAVEL</span>
-      <h2>Your next journey starts here.</h2>
-      <p>Simple planning. More places to discover.</p>
-    </div>
-    <span class="visual-caption">A little closer to somewhere new</span>
-  </div>
-
-  <section class="auth-card">
+<section class="auth-layout">
+  <div class="auth-card">
     <span class="eyebrow">AirlineMS account</span>
     <h1>{{registering() ? 'Create your account' : 'Welcome back'}}</h1>
     <p class="muted">{{registering() ? 'Save your details and book a journey.' : 'Sign in to manage your trips and reservations.'}}</p>
 
-    <form [formGroup]="form" (ngSubmit)="submit()">
+    <form class="form-stack" [formGroup]="form" (ngSubmit)="submit()">
       @if(registering()) {
-        <label>Full name
-          <input formControlName="name" placeholder="Your name" autocomplete="name" maxlength="100"
+        <div class="form-field">
+          <label for="account-name">Full name</label>
+          <input id="account-name" formControlName="name" placeholder="Your name" autocomplete="name" maxlength="100"
+            aria-describedby="account-name-error"
             [attr.aria-invalid]="form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty || submitted())" />
-        </label>
-        @if(form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty || submitted())){
-          <small class="field-error">Enter a name with at most 100 characters.</small>
-        }
+          @if(form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty || submitted())){
+            <small id="account-name-error" class="field-error">Enter a name with at most 100 characters.</small>
+          }
+        </div>
       }
-      <label>Email
-        <input formControlName="email" type="email" placeholder="you@example.com" autocomplete="email" maxlength="150"
+      <div class="form-field">
+        <label for="account-email">Email</label>
+        <input id="account-email" formControlName="email" type="email" placeholder="you@example.com" autocomplete="email" maxlength="150"
+          aria-describedby="account-email-error"
           [attr.aria-invalid]="form.controls.email.invalid && (form.controls.email.touched || form.controls.email.dirty || submitted())" />
-      </label>
-      @if(form.controls.email.invalid && (form.controls.email.touched || form.controls.email.dirty || submitted())){
-        <small class="field-error">
-          @if(form.controls.email.hasError('required')){Enter your email address.}
-          @else if(form.controls.email.hasError('email')){Enter a valid email address.}
-          @else{Email must be 150 characters or fewer.}
-        </small>
-      }
-      <label>Password
-        <input formControlName="password" type="password" placeholder="At least 8 characters"
+        @if(form.controls.email.invalid && (form.controls.email.touched || form.controls.email.dirty || submitted())){
+          <small id="account-email-error" class="field-error">
+            @if(form.controls.email.hasError('required')){Enter your email address.}
+            @else if(form.controls.email.hasError('email')){Enter a valid email address.}
+            @else{Email must be 150 characters or fewer.}
+          </small>
+        }
+      </div>
+      <div class="form-field">
+        <label for="account-password">Password</label>
+        <input id="account-password" formControlName="password" type="password" placeholder="At least 8 characters"
           [attr.autocomplete]="registering() ? 'new-password' : 'current-password'" maxlength="72"
+          aria-describedby="account-password-error"
           [attr.aria-invalid]="form.controls.password.invalid && (form.controls.password.touched || form.controls.password.dirty || submitted())" />
-      </label>
-      @if(form.controls.password.invalid && (form.controls.password.touched || form.controls.password.dirty || submitted())){
-        <small class="field-error">
-          @if(form.controls.password.hasError('required')){Enter your password.}
-          @else if(form.controls.password.hasError('minlength')){Password must have at least 8 characters.}
-          @else{Password cannot exceed 72 characters.}
-        </small>
-      }
+        @if(form.controls.password.invalid && (form.controls.password.touched || form.controls.password.dirty || submitted())){
+          <small id="account-password-error" class="field-error">
+            @if(form.controls.password.hasError('required')){Enter your password.}
+            @else if(form.controls.password.hasError('minlength')){Password must have at least 8 characters.}
+            @else{Password cannot exceed 72 characters.}
+          </small>
+        }
+      </div>
       @if(error()){<p class="error" role="alert">{{error()}}</p>}
       @if(success()){<p class="success" role="status">{{success()}}</p>}
-
       <button class="primary wide" [disabled]="busy()">
         {{busy() ? 'Please wait…' : registering() ? 'Create account' : 'Sign in'}}
       </button>
@@ -59,11 +55,11 @@
     </button>
 
     @if(!registering()){
-      <div class="demo-hint">
-        <strong>Quick demo access</strong>
-        <span>Customer · customer&#64;airline.test / Customer&#64;12345</span>
-        <span>Admin · admin&#64;airline.test / Admin&#64;12345</span>
-      </div>
+      <details class="demo-hint">
+        <summary>Demo accounts</summary>
+        <p><strong>Customer</strong><span>customer&#64;airline.test</span><span>Customer&#64;12345</span></p>
+        <p><strong>Admin</strong><span>admin&#64;airline.test</span><span>Admin&#64;12345</span></p>
+      </details>
     }
-  </section>
+  </div>
 </section>

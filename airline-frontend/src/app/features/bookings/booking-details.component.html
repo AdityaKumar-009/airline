@@ -19,7 +19,7 @@
       }
       <div class="route-overview">
         <div><strong>{{b.originCode || b.origin || '—'}}</strong><p class="muted">{{b.origin || 'Origin'}}</p></div>
-        <div class="route-arrow">✈ ───────→</div>
+        <div class="route-arrow" aria-hidden="true">→</div>
         <div><strong>{{b.destinationCode || b.destination || '—'}}</strong><p class="muted">{{b.destination || 'Destination'}}</p></div>
       </div>
       <dl class="ticket-facts">
@@ -29,7 +29,7 @@
         <div><dt>Contact email</dt><dd>{{b.contactEmail || 'Not recorded'}}</dd></div>
       </dl>
       <h2>Passengers</h2>
-      <div class="ticket-table-wrap">
+      <div class="ticket-table-wrap" tabindex="0" role="region" aria-label="Passenger details">
         <table><thead><tr><th>Name</th><th>Age</th><th>Seat</th><th>Fare</th></tr></thead>
           <tbody>
             @for(p of b.passengers;track p.id){

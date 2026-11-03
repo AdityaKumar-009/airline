@@ -1,92 +1,65 @@
-.admin-tabs {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  margin: -2px 0 22px;
-  border-bottom: 1px solid var(--border);
-  scrollbar-width: thin;
-}
-
-.admin-tabs button {
-  flex: 0 0 auto;
-  padding: 12px 15px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: #718096;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.admin-tabs button:hover { color: var(--navy); }
-
-.admin-tabs button.active { border-color: var(--blue); color: var(--navy); }
-
-.admin-tabs button:focus-visible { outline: 3px solid #6ea4ef; outline-offset: -3px; }
-
-.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
-
-.kpi { display: flex; min-width: 0; flex-direction: column; gap: 12px; padding: 20px; }
-
-.kpi .muted { min-height: 40px; margin: 0; }
-
-.kpi strong { color: var(--navy); font-size: clamp(1.4rem, 2.5vw, 2rem); overflow-wrap: anywhere; }
-
+.admin-tabs { display: flex; gap: 1.5rem; overflow-x: auto; margin-bottom: 2rem; border-bottom: 1px solid var(--border); scrollbar-width: thin; }
+.admin-tabs button { flex: 0 0 auto; min-height: 48px; padding: .75rem 0; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: .875rem; font-weight: 500; white-space: nowrap; }
+.admin-tabs button:hover, .admin-tabs button.active { color: var(--ink); }
+.admin-tabs button.active { border-bottom-color: var(--ink); }
+.admin-tabs button:focus-visible { outline-offset: -3px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.kpi { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; border: 0; background: var(--soft); }
+.kpi .muted { min-height: 44px; margin: 0; font-size: .8125rem; }
+.kpi strong { font-size: clamp(1.5rem, 3vw, 2.5rem); font-weight: 500; letter-spacing: -.04em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .directory-panel { min-width: 0; }
-
-.directory-panel h2 { margin-bottom: 5px; }
-
-.directory-heading { align-items: end; gap: 20px; margin: 0 0 18px; }
-
-.directory-search { width: min(100%, 340px); }
-
-.directory-search > label { margin-bottom: 7px; }
-
-.filter-control { display: flex; align-items: center; gap: 8px; }
-
+.directory-panel > .table-wrap { margin-top: 1.5rem; }
+.directory-heading { align-items: start; gap: 2rem; margin: 0 0 1.5rem; }
+.directory-search { width: min(100%, 340px); flex-shrink: 0; }
+.directory-search > label { margin-bottom: .5rem; }
+.filter-control { display: flex; align-items: center; gap: .5rem; }
 .filter-control input { flex: 1; }
+.filter-control button { min-height: 48px; }
+.booking-filters { display: flex; align-items: start; gap: .75rem; }
+.booking-filters label { width: 140px; }
+.booking-filters button { min-height: 48px; margin-top: 1.75rem; }
+.admin-form h2 { margin-bottom: 1.5rem; }
+.admin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 1.5rem; }
+.admin-grid > button { min-height: 48px; margin-top: 1.75rem; }
+.admin-form > .error, .admin-form > .success { margin-top: 1.5rem; }
+.quick-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1.5rem; }
+.flight-admin-row { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.5rem 0; }
+.flight-admin-row > div { min-width: 0; }
+.flight-admin-row p { overflow-wrap: anywhere; }
+.flight-admin-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.editor { margin-block: 1.5rem; border-color: #a9a9b0; }
+.editor .section-heading { margin: 0 0 .5rem; }
+.editor h2 { margin: 0; }
+.editor .admin-grid { margin-top: 1.5rem; }
+.empty.compact { padding: 2rem 1rem; }
 
-.booking-filters { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 1024px) {
+  .directory-heading { flex-direction: column; align-items: stretch; }
+  .directory-search { width: 100%; }
+  .flight-admin-row { flex-wrap: wrap; }
+}
 
-.booking-filters label { min-width: 135px; }
-
-.admin-form h2 { margin-bottom: 18px; }
-
-.admin-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 15px; }
-
-.admin-grid button { min-height: 46px; }
-
-.quick-actions { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 20px; }
-
-.flight-admin-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; }
-
-.flight-admin-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-
-.editor { margin: 18px 0; border-color: #b8cdec; }
-
-.empty.compact { padding: 28px 16px; }
-
-@media (max-width: 900px) {
+@media (max-width: 760px) {
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .directory-heading { align-items: stretch; flex-direction: column; }
-  .directory-search { width: 100%; }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .admin-grid { grid-template-columns: 1fr; }
-  .admin-tabs { margin-bottom: 18px; }
-  .admin-tabs button { padding: 11px 12px; }
-  .kpi-grid { gap: 9px; }
-  .kpi { gap: 8px; padding: 14px; }
-  .kpi .muted { min-height: 52px; font-size: .78rem; }
+  .admin-grid > button { margin-top: 0; }
+  .kpi { padding: 1rem; }
+  .kpi .muted { min-height: 60px; }
   .quick-actions { display: grid; grid-template-columns: 1fr; }
-  .quick-actions button { width: 100%; }
   .flight-admin-row { align-items: flex-start; flex-direction: column; }
   .flight-admin-actions { width: 100%; }
-  .booking-filters { display: grid; width: 100%; grid-template-columns: 1fr 1fr; }
-  .booking-filters label { min-width: 0; }
-  .booking-filters button { min-height: 42px; }
-  .filter-control { align-items: stretch; flex-wrap: wrap; }
-  .filter-control button { flex: 1; }
+  .flight-admin-actions .secondary { flex: 1; }
+  .flight-admin-actions .text-button { width: 100%; }
+  .booking-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .booking-filters label { width: auto; min-width: 0; }
+  .booking-filters button { margin-top: 0; }
+}
+
+@media (max-width: 400px) {
+  .booking-filters { grid-template-columns: 1fr; }
+  input[type="datetime-local"] { padding-inline: .5rem; font-size: .875rem; }
 }

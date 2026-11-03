@@ -1,6 +1,6 @@
 <section class="intro">
   <h1>My profile</h1>
-  <p class="muted">Review your account details, display name and account security.</p>
+  <p class="muted">Your account details and security settings.</p>
 </section>
 <div class="profile-sections">
   <section class="panel profile-panel" aria-labelledby="profile-title">
@@ -8,19 +8,24 @@
     @if(loading()){<p class="muted">Loading your profile…</p>}
     @else if(error() && !profile()){<p class="error" role="alert">{{error()}}</p>}
     @else{
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <label for="profile-name">Full name</label>
-        <input id="profile-name" formControlName="name" maxlength="100" autocomplete="name"
-          [attr.aria-invalid]="form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty)" />
-        @if((form.controls.name.touched || form.controls.name.dirty) && form.controls.name.invalid){
-          <small class="field-error">
-            @if(form.controls.name.hasError('required') || form.controls.name.hasError('pattern')){Enter your name.}
-            @else{Your name must be 100 characters or fewer.}
-          </small>
-        }
-        <label for="profile-email">Email address</label>
-        <input id="profile-email" [value]="profile()?.email || ''" readonly />
-        <p class="muted">Email and account role cannot be changed here.</p>
+      <form class="form-stack" [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-field">
+          <label for="profile-name">Full name</label>
+          <input id="profile-name" formControlName="name" maxlength="100" autocomplete="name"
+            aria-describedby="profile-name-error"
+            [attr.aria-invalid]="form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty)" />
+          @if((form.controls.name.touched || form.controls.name.dirty) && form.controls.name.invalid){
+            <small id="profile-name-error" class="field-error">
+              @if(form.controls.name.hasError('required') || form.controls.name.hasError('pattern')){Enter your name.}
+              @else{Your name must be 100 characters or fewer.}
+            </small>
+          }
+        </div>
+        <div class="form-field">
+          <label for="profile-email">Email address</label>
+          <input id="profile-email" [value]="profile()?.email || ''" readonly aria-describedby="profile-email-help" />
+          <p id="profile-email-help" class="muted">Email and account role cannot be changed here.</p>
+        </div>
         @if(error()){<p class="error" role="alert">{{error()}}</p>}
         @if(success()){<p class="success" role="status">{{success()}}</p>}
         <button class="primary" [disabled]="saving()">
@@ -32,29 +37,33 @@
 
   <section class="panel profile-panel" aria-labelledby="security-title">
     <h2 id="security-title">Change password</h2>
-    <form [formGroup]="passwordForm" (ngSubmit)="updatePassword()">
-      <label for="old-password">Current password</label>
-      <input id="old-password" type="password" autocomplete="current-password" maxlength="72"
-        formControlName="currentPassword"
-        [attr.aria-invalid]="passwordForm.controls.currentPassword.invalid && (passwordForm.controls.currentPassword.touched || passwordForm.controls.currentPassword.dirty) || !!currentPasswordError()"
-        (input)="currentPasswordError.set('')" />
-      @if((passwordForm.controls.currentPassword.touched || passwordForm.controls.currentPassword.dirty) && passwordForm.controls.currentPassword.hasError('required')){
-        <small class="field-error">Enter your current password.</small>
-      }
-      @if(currentPasswordError()){<small class="field-error">{{currentPasswordError()}}</small>}
-      <label for="new-password">New password</label>
-      <input id="new-password" type="password" autocomplete="new-password" maxlength="72"
-        formControlName="newPassword"
-        [attr.aria-invalid]="passwordForm.controls.newPassword.invalid && (passwordForm.controls.newPassword.touched || passwordForm.controls.newPassword.dirty) || passwordsSame()" />
-      <p class="muted">Use 8–72 characters. Choose a password different from your current one.</p>
-      @if((passwordForm.controls.newPassword.touched || passwordForm.controls.newPassword.dirty) && passwordForm.controls.newPassword.invalid){
-        <small class="field-error">
-          @if(passwordForm.controls.newPassword.hasError('required')){Enter a new password.}
-          @else if(passwordForm.controls.newPassword.hasError('minlength')){Use at least 8 characters.}
-          @else{Use no more than 72 characters.}
-        </small>
-      }
-      @if(passwordsSame()){<small class="field-error">New password must differ from your current password.</small>}
+    <form class="form-stack" [formGroup]="passwordForm" (ngSubmit)="updatePassword()">
+      <div class="form-field">
+        <label for="old-password">Current password</label>
+        <input id="old-password" type="password" autocomplete="current-password" maxlength="72"
+          formControlName="currentPassword" aria-describedby="old-password-error current-password-error"
+          [attr.aria-invalid]="passwordForm.controls.currentPassword.invalid && (passwordForm.controls.currentPassword.touched || passwordForm.controls.currentPassword.dirty) || !!currentPasswordError()"
+          (input)="currentPasswordError.set('')" />
+        @if((passwordForm.controls.currentPassword.touched || passwordForm.controls.currentPassword.dirty) && passwordForm.controls.currentPassword.hasError('required')){
+          <small id="old-password-error" class="field-error">Enter your current password.</small>
+        }
+        @if(currentPasswordError()){<small id="current-password-error" class="field-error">{{currentPasswordError()}}</small>}
+      </div>
+      <div class="form-field">
+        <label for="new-password">New password</label>
+        <input id="new-password" type="password" autocomplete="new-password" maxlength="72"
+          formControlName="newPassword" aria-describedby="new-password-help new-password-error same-password-error"
+          [attr.aria-invalid]="passwordForm.controls.newPassword.invalid && (passwordForm.controls.newPassword.touched || passwordForm.controls.newPassword.dirty) || passwordsSame()" />
+        <p id="new-password-help" class="muted">Use 8–72 characters. Choose a password different from your current one.</p>
+        @if((passwordForm.controls.newPassword.touched || passwordForm.controls.newPassword.dirty) && passwordForm.controls.newPassword.invalid){
+          <small id="new-password-error" class="field-error">
+            @if(passwordForm.controls.newPassword.hasError('required')){Enter a new password.}
+            @else if(passwordForm.controls.newPassword.hasError('minlength')){Use at least 8 characters.}
+            @else{Use no more than 72 characters.}
+          </small>
+        }
+        @if(passwordsSame()){<small id="same-password-error" class="field-error">New password must differ from your current password.</small>}
+      </div>
       @if(passwordError()){<p class="error" role="alert">{{passwordError()}}</p>}
       @if(passwordSuccess()){<p class="success" role="status">{{passwordSuccess()}}</p>}
       <button class="primary" [disabled]="passwordSaving() || passwordsSame()">
@@ -63,4 +72,3 @@
     </form>
   </section>
 </div>
-

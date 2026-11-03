@@ -1,70 +1,38 @@
-.ticket-shell { width: min(100%, 900px); margin: 0 auto; }
-
-.ticket-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-
+.ticket-shell { width: min(100%, 880px); margin-inline: auto; }
+.ticket-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
 .ticket-actions .back { margin: 0; }
-
-.itinerary { padding: clamp(20px, 4vw, 38px); }
-
-.ticket-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
-
-.ticket-heading h1 { margin: 5px 0; color: var(--navy); font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: .12em; }
-
-.route-overview {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(90px, .7fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 14px;
-  margin: 28px 0;
-  padding: 22px 0;
-  border-top: 1px dashed #c9d5e4;
-  border-bottom: 1px dashed #c9d5e4;
-}
-
+.itinerary { padding: clamp(1.5rem, 4vw, 3rem); }
+.ticket-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.ticket-heading h1 { margin: .5rem 0; font-size: clamp(1.75rem, 4vw, 2.5rem); letter-spacing: .06em; }
+.route-overview { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 1.5rem; margin-block: 2rem; padding-block: 2rem; border-block: 1px solid var(--border); }
 .route-overview > div { min-width: 0; }
-
-.route-overview > div p { overflow-wrap: anywhere; }
-
+.route-overview p { overflow-wrap: anywhere; }
 .route-overview > div:last-child { text-align: right; }
-
-.route-overview strong { color: var(--navy); font-size: clamp(1.4rem, 4vw, 2rem); }
-
-.route-arrow { color: #6f8eb5; text-align: center; white-space: nowrap; }
-
-.ticket-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 18px 0 28px; }
-
-.ticket-facts div { min-width: 0; padding: 14px; border-radius: 11px; background: #f7f9fc; }
-
-.ticket-facts dt { color: var(--muted); font-size: .76rem; }
-
-.ticket-facts dd { margin: 5px 0 0; font-weight: 650; overflow-wrap: anywhere; }
-
-.itinerary h2 { margin-bottom: 14px; }
-
+.route-overview strong { font-size: clamp(1.5rem, 4vw, 2.5rem); letter-spacing: -.03em; }
+.route-arrow { color: var(--muted); font-size: 1.5rem; }
+.ticket-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2rem; margin: 0 0 2rem; }
+.ticket-facts div { min-width: 0; }
+.ticket-facts dt { color: var(--muted); font-size: .8125rem; }
+.ticket-facts dd { margin: .5rem 0 0; font-size: .9375rem; overflow-wrap: anywhere; }
+.itinerary h2 { margin-bottom: 1rem; }
 .ticket-table-wrap { width: 100%; min-width: 0; overflow-x: auto; }
+.ticket-total { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; padding-block: 1.5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: .875rem; }
+.ticket-total strong { color: var(--ink); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.flight-warning { margin: 1.5rem 0 0; padding: 1rem; border: 1px solid #e5d6b7; border-radius: 8px; background: #fffaf0; color: #78561a; font-size: .875rem; }
+.footnote { margin: 0; font-size: .75rem; }
 
-.ticket-total { display: flex; justify-content: space-between; gap: 12px; margin: 18px 0; padding: 18px 0; border-top: 1px solid var(--border); color: #50627a; }
-
-.ticket-total strong { color: var(--navy); font-size: 1.2rem; }
-
-.flight-warning { padding: 13px 15px; border: 1px solid #f1d08a; border-radius: 10px; background: #fff9e9; color: #805c10; }
-
-.footnote { margin-bottom: 0; font-size: .78rem; }
-
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .ticket-heading { flex-wrap: wrap; }
-  .ticket-actions { align-items: stretch; flex-direction: column; }
-  .ticket-actions .secondary { width: 100%; }
-  .route-overview { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; }
-  .route-arrow { font-size: .8rem; }
-  .ticket-facts { grid-template-columns: 1fr; gap: 9px; }
-  .ticket-table-wrap table { table-layout: fixed; white-space: normal; }
-  .ticket-table-wrap th, .ticket-table-wrap td { overflow-wrap: anywhere; }
+  .ticket-actions { flex-wrap: wrap; }
+  .route-overview { gap: 1rem; }
+  .ticket-facts { grid-template-columns: 1fr; }
+  .ticket-table-wrap table { white-space: normal; }
+  .ticket-table-wrap th, .ticket-table-wrap td { padding: .75rem .5rem; overflow-wrap: anywhere; }
+  .ticket-table-wrap td:first-child { word-break: break-word; }
 }
-
 @media print {
   .ticket-actions { display: none; }
   .ticket-shell { width: 100%; }
-  .itinerary { border: 0; box-shadow: none; }
-  body { background: #fff; }
+  .itinerary { border: 0; padding: 0; }
+  .ticket-table-wrap { overflow: visible; }
 }

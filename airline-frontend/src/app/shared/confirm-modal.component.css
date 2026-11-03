@@ -1,64 +1,15 @@
-:host { position: relative; z-index: 1100; }
+:host { position: relative; z-index: 20; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 1rem; overflow-y: auto; background: rgb(0 0 0 / 35%); }
+.confirm-modal { width: min(100%, 460px); max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 2rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.confirm-modal h2 { margin-bottom: 1rem; font-size: 1.5rem; }
+.confirm-modal p { margin: 0; color: var(--muted); line-height: 1.6; overflow-wrap: anywhere; }
+.modal-actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 2rem; }
+.modal-actions button { min-width: 100px; }
+.modal-actions .danger-button { background: var(--danger); color: #fff; }
+.modal-actions .danger-button:hover { background: #921b12; }
 
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1100;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(15, 31, 52, .48);
-  backdrop-filter: blur(4px);
+@media (max-width: 480px) {
+  .confirm-modal { padding: 1.5rem; }
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions button { width: 100%; }
 }
-
-.confirm-modal {
-  width: min(100%, 460px);
-  padding: 28px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 24px 70px rgba(16, 37, 67, .24);
-  animation: modal-enter 160ms ease-out;
-}
-
-.modal-mark {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  margin-bottom: 16px;
-  place-items: center;
-  border-radius: 13px;
-  background: #edf4fd;
-  color: var(--blue);
-  font-size: 1.1rem;
-  font-weight: 750;
-}
-
-.confirm-modal h2 { margin: 0 0 8px; color: var(--ink); font-size: 1.2rem; }
-
-.confirm-modal p { margin: 0; color: var(--muted); line-height: 1.55; }
-
-.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-
-.modal-actions button { min-width: 112px; }
-
-.modal-actions .primary.danger-button, .modal-actions .primary.danger-button:hover {
-  border-color: var(--danger);
-  background: var(--danger);
-  color: #fff;
-}
-
-.modal-actions button:focus-visible { outline: 3px solid #6ea4ef; outline-offset: 3px; }
-
-@keyframes modal-enter {
-  from { opacity: 0; transform: translateY(8px) scale(.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@media (max-width: 560px) {
-  .modal-backdrop { align-items: end; padding: 0; }
-  .confirm-modal { width: 100%; padding: 24px 20px calc(20px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; }
-  .modal-actions button { flex: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) { .confirm-modal { animation: none; } }

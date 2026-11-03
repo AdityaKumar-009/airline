@@ -1,31 +1,34 @@
+<a class="skip-link" href="#main-content" (click)="$event.preventDefault(); mainContent.focus()">Skip to content</a>
 <header class="topbar">
   <div class="container nav">
     <a class="brand" routerLink="/flights" aria-label="AirlineMS home">
-      <span class="brand-icon" aria-hidden="true">✈</span>
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 16v-2l-7-4.5V4a2 2 0 0 0-4 0v5.5L3 14v2l7-2v5l-2 1v1l4-1 4 1v-1l-2-1v-5z" /></svg>
       <span>AirlineMS</span>
     </a>
 
-    <nav aria-label="Main navigation">
+    <nav class="primary-nav" aria-label="Main navigation">
       <a class="nav-link" routerLink="/flights" routerLinkActive="active"
-        [routerLinkActiveOptions]="{exact: true}">Flights</a>
+        [routerLinkActiveOptions]="{exact: true}" ariaCurrentWhenActive="page">Flights</a>
       @if(auth.role()==='CUSTOMER'){
-        <a class="nav-link" routerLink="/my-bookings" routerLinkActive="active">My Bookings</a>
-        <a class="nav-link" routerLink="/profile" routerLinkActive="active">My Profile</a>
+        <a class="nav-link" routerLink="/my-bookings" routerLinkActive="active" ariaCurrentWhenActive="page">My bookings</a>
+        <a class="nav-link" routerLink="/profile" routerLinkActive="active" ariaCurrentWhenActive="page">My profile</a>
       }
       @if(auth.role()==='ADMIN'){
-        <a class="nav-link" routerLink="/admin" routerLinkActive="active">Manage Flights</a>
+        <a class="nav-link" routerLink="/admin" routerLinkActive="active" ariaCurrentWhenActive="page">Administration</a>
       }
+    </nav>
+    <div class="account-nav">
       @if(auth.token()){
         <span class="welcome">{{auth.name()}}</span>
         <button class="text-button logout-button" (click)="logout()">Log out</button>
       } @else {
-        <a class="nav-login" routerLink="/login" routerLinkActive="active">Log in</a>
+        <a class="secondary nav-login" routerLink="/login" routerLinkActive="active" ariaCurrentWhenActive="page">Log in</a>
       }
-    </nav>
+    </div>
   </div>
 </header>
 
-<main class="container page">
+<main #mainContent id="main-content" class="container page" tabindex="-1">
   <router-outlet />
 </main>
 
