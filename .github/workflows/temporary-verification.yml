@@ -1,0 +1,86 @@
+name: Temporary integration verification
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root --password=password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.9.0'
+          cache: npm
+          cache-dependency-path: airline-frontend/package-lock.json
+      - name: Compile and unit test Java
+        run: mvn -B clean package
+      - name: Build Angular app
+        working-directory: airline-frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Start services and verify migrations and booking workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          java tools/GenerateKeys.java
+          java -jar discovery-server/target/discovery-server-1.0.0.jar > /tmp/discovery.log 2>&1 &
+          java -jar auth-service/target/auth-service-1.0.0.jar > /tmp/auth.log 2>&1 &
+          java -jar flight-service/target/flight-service-1.0.0.jar > /tmp/flight.log 2>&1 &
+          java -jar booking-service/target/booking-service-1.0.0.jar > /tmp/booking.log 2>&1 &
+          java -jar api-gateway/target/api-gateway-1.0.0.jar > /tmp/gateway.log 2>&1 &
+          trap 'for file in /tmp/{discovery,auth,flight,booking,gateway}.log; do echo "== $file =="; tail -80 "$file"; done' ERR
+          for i in {1..90}; do
+            if curl -sf http://localhost:8080/api/flights > /tmp/flights.json; then break; fi
+            sleep 3
+          done
+          curl -sf http://localhost:8080/api/flights/airports | jq -e 'length >= 8'
+          CUSTOMER_TOKEN=$(curl -sf -H 'Content-Type: application/json' \
+            -d '{"email":"customer@airline.test","password":"Customer@12345"}' \
+            http://localhost:8080/api/auth/login | jq -r '.token')
+          test -n "$CUSTOMER_TOKEN"
+          BOOKING=$(curl -sf -X POST -H 'Content-Type: application/json' \
+            -H "Authorization: Bearer $CUSTOMER_TOKEN" \
+            -d '{"flightId":1,"contactEmail":"test@example.test","passengers":[{"fullName":"Demo One","age":24,"seatNumber":1},{"fullName":"Demo Two","age":25,"seatNumber":2}]}' \
+            http://localhost:8080/api/bookings)
+          echo "$BOOKING" | jq -e '.pnr | length == 8'
+          echo "$BOOKING" | jq -e '.passengers | length == 2'
+          BOOKING_ID=$(echo "$BOOKING" | jq -r '.id')
+          curl -sf -H "Authorization: Bearer $CUSTOMER_TOKEN" \
+            http://localhost:8080/api/bookings/me | jq -e 'length > 0'
+          curl -sf -X PATCH -H "Authorization: Bearer $CUSTOMER_TOKEN" \
+            http://localhost:8080/api/bookings/"$BOOKING_ID"/cancel \
+            | jq -e '.status == "CANCELLED"'
+          curl -sf 'http://localhost:8080/api/bookings/seats?flightId=1' | jq -e 'length == 0'
+          ADMIN_TOKEN=$(curl -sf -H 'Content-Type: application/json' \
+            -d '{"email":"admin@airline.test","password":"Admin@12345"}' \
+            http://localhost:8080/api/auth/login | jq -r '.token')
+          curl -sf -H "Authorization: Bearer $ADMIN_TOKEN" \
+            http://localhost:8080/api/flights/manage | jq -e 'length > 0'
+      - name: Show service logs if job fails
+        if: failure()
+        run: |
+          for file in /tmp/{discovery,auth,flight,booking,gateway}.log; do
+            if [ -f "$file" ]; then echo "== $file =="; tail -120 "$file"; fi
+          done
